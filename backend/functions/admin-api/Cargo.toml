@@ -1,0 +1,11 @@
+[package]
+name = "mwt-admin-api"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+lambda_http.workspace = true
+mwt-domain = { path = "../../crates/domain" }
+tokio.workspace = true
+tracing-subscriber.workspace = true
