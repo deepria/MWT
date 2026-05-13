@@ -8,7 +8,7 @@
         "lambda:GetFunctionConfiguration",
         "lambda:UpdateFunctionCode"
       ],
-      "Resource": "arn:aws:lambda:ap-northeast-2:123456789012:function:mwt-public-api"
+      "Resource": "arn:aws:lambda:ap-northeast-2:588738612011:function:mwt-public-api"
     }
   ]
 }

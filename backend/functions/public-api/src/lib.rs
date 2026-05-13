@@ -38,9 +38,18 @@ where
         ("GET", ["problems", problem_id, "statement"]) => {
             get_statement(&repository, problem_id).await
         }
-        ("GET", ["submissions", submission_id]) => get_submission(&repository, submission_id).await,
+        ("GET", ["submissions", submission_id]) => {
+            let auth = match auth_context(&request) {
+                Some(auth) => auth,
+                None => return unauthorized("authentication required"),
+            };
+            get_submission(&repository, submission_id, &auth).await
+        }
         ("GET", ["users", "me", "submissions"]) => {
-            let auth = auth_context(&request)?;
+            let auth = match auth_context(&request) {
+                Some(auth) => auth,
+                None => return unauthorized("authentication required"),
+            };
             list_my_submissions(&repository, &auth.user_id).await
         }
         _ => json_response(
@@ -100,12 +109,22 @@ where
     )
 }
 
-async fn get_submission<R>(repository: &R, submission_id: &str) -> Result<Response<Body>, Error>
+async fn get_submission<R>(
+    repository: &R,
+    submission_id: &str,
+    auth: &AuthContext,
+) -> Result<Response<Body>, Error>
 where
     R: SubmissionRepository,
 {
     match repository.get_submission(submission_id).await {
-        Ok(submission) => json_response(StatusCode::OK, &submission),
+        Ok(submission) => {
+            if submission.submission.user_id == auth.user_id || auth.is_admin() {
+                json_response(StatusCode::OK, &submission)
+            } else {
+                forbidden("submission access denied")
+            }
+        }
         Err(RepositoryError::NotFound(_)) => not_found("submission not found"),
         Err(error) => Err(error.into()),
     }
@@ -119,7 +138,7 @@ where
     json_response(StatusCode::OK, &submissions)
 }
 
-fn auth_context(request: &Request) -> Result<AuthContext, Error> {
+fn auth_context(request: &Request) -> Option<AuthContext> {
     let claims = request
         .request_context_ref()
         .and_then(|context| context.authorizer())
@@ -129,8 +148,7 @@ fn auth_context(request: &Request) -> Result<AuthContext, Error> {
     let user_id = claims
         .and_then(|claims| claims.get("sub"))
         .cloned()
-        .or_else(|| header(request, "x-mwt-user-id"))
-        .unwrap_or_else(|| "mock-user-001".to_string());
+        .or_else(|| header(request, "x-mwt-user-id"))?;
     let email = claims
         .and_then(|claims| claims.get("email"))
         .cloned()
@@ -148,7 +166,7 @@ fn auth_context(request: &Request) -> Result<AuthContext, Error> {
         })
         .unwrap_or_default();
 
-    Ok(AuthContext {
+    Some(AuthContext {
         user_id,
         email,
         groups,
@@ -166,6 +184,24 @@ fn header(request: &Request, name: &str) -> Option<String> {
 fn not_found(message: &str) -> Result<Response<Body>, Error> {
     json_response(
         StatusCode::NOT_FOUND,
+        &ErrorBody {
+            message: message.to_string(),
+        },
+    )
+}
+
+fn unauthorized(message: &str) -> Result<Response<Body>, Error> {
+    json_response(
+        StatusCode::UNAUTHORIZED,
+        &ErrorBody {
+            message: message.to_string(),
+        },
+    )
+}
+
+fn forbidden(message: &str) -> Result<Response<Body>, Error> {
+    json_response(
+        StatusCode::FORBIDDEN,
         &ErrorBody {
             message: message.to_string(),
         },
@@ -220,6 +256,48 @@ mod tests {
             Method::GET,
             "/users/me/submissions",
             &[("x-mwt-user-id", "mock-user-001")],
+        );
+
+        let response = handle_request(request, MemoryRepository::default())
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        assert!(body_text(response).contains("sub-20260429-001"));
+    }
+
+    #[tokio::test]
+    async fn rejects_my_submissions_without_auth() {
+        let request = request(Method::GET, "/users/me/submissions", &[]);
+
+        let response = handle_request(request, MemoryRepository::default())
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[tokio::test]
+    async fn rejects_submission_for_other_user() {
+        let request = request(
+            Method::GET,
+            "/submissions/sub-20260429-001",
+            &[("x-mwt-user-id", "other-user")],
+        );
+
+        let response = handle_request(request, MemoryRepository::default())
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    }
+
+    #[tokio::test]
+    async fn allows_admin_to_read_submission() {
+        let request = request(
+            Method::GET,
+            "/submissions/sub-20260429-001",
+            &[("x-mwt-user-id", "admin-user"), ("x-mwt-groups", "admin")],
         );
 
         let response = handle_request(request, MemoryRepository::default())

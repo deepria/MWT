@@ -34,6 +34,7 @@ parent_plan: "[[mwt-execution-plan-v1.2]]"
 - P4-007 timeout/limit 제어 구현
 - P4-008 상태 전이 및 재처리 규칙 구현
 - P4-009 structured log 및 DLQ 운영 절차 구현
+- P4-010 submission-consumer Lambda CI/CD 구성
 
 ## 추천안
 
@@ -104,8 +105,22 @@ parent_plan: "[[mwt-execution-plan-v1.2]]"
 - end-to-end 채점
 - 상태 전이 및 재처리 규칙
 - structured log 스키마
+- submission-consumer Lambda 배포 workflow
+
+### P4-010 submission-consumer Lambda CI/CD 구성
+
+- `.github/workflows/deploy-submission-consumer-lambda.yml` 또는 공통 reusable Lambda deploy workflow를 추가한다.
+- `submission-consumer`를 Lambda 런타임/아키텍처에 맞게 패키징한다.
+- GitHub Actions OIDC role 권한에 `submission-consumer` Lambda code update 권한을 추가한다.
+- 첫 배포는 수동 실행으로 검증하고, 이후 `backend/**` 변경 기준 자동 배포 여부를 결정한다.
+
+완료 기준:
+
+- GitHub Actions에서 `submission-consumer` Lambda를 빌드, 테스트, 패키징, 배포할 수 있다.
+- 배포 후 SQS event source 또는 수동 테스트 이벤트로 consumer 실행 경로를 확인한다.
 
 ## 완료 기준
 
 - 최소 한 문제 기준으로 Rust와 Python 채점이 각각 끝까지 동작한다
 - 실패 제출이 DLQ 또는 최종 상태로 정리되고 영구 고착되지 않는다
+- `submission-consumer` 변경을 재현 가능한 CI/CD 경로로 개발기 Lambda에 배포할 수 있다

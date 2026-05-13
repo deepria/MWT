@@ -10,7 +10,7 @@ tags:
 doc_type: execution-plan
 status: active
 version: v1.2
-updated: 2026-04-28
+updated: 2026-05-13
 hub: "[[MWT 마스터 인덱스]]"
 related:
   - "[[mwt-architecture-v1.3]]"
@@ -57,9 +57,9 @@ related:
 
 ## 2. MVP 완료 조건
 
-- [ ] 로그인 가능
-- [ ] 문제 목록 조회 가능
-- [ ] 문제 상세 조회 가능
+- [x] 로그인 가능
+- [x] 문제 목록 조회 가능
+- [x] 문제 상세 조회 가능
 - [ ] 관리자 문제 등록 가능
 - [ ] statement 업로드 가능
 - [ ] hidden tests bundle 생성/등록 가능
@@ -71,15 +71,15 @@ related:
 
 ### Phase 0
 
-- [ ] 저장소 및 환경 준비
+- [x] 저장소 및 환경 준비
 
 ### Phase 1
 
-- [ ] 프론트 기본 뼈대
+- [x] 프론트 기본 뼈대
 
 ### Phase 2
 
-- [ ] API 및 데이터 모델
+- [x] API 및 데이터 모델
 
 ### Phase 3
 
@@ -118,8 +118,8 @@ related:
 
 ### P0-001. 리전 결정
 
-- [ ] `ap-northeast-2` 선택
-- [ ] 비용 우선 여부 기록
+- [x] `ap-northeast-2` 선택
+- [x] 비용 우선 여부 기록
 
 추천:
 
@@ -133,30 +133,30 @@ related:
 
 완료 기준:
 
-- [ ] 기본 리전 확정
+- [x] 기본 리전 확정
 
 ### P0-002. 저장소 구조 생성
 
-- [ ] `frontend/`
-- [ ] `backend/`
-- [ ] `judge/`
-- [ ] `infra/`
-- [ ] `docs/`
+- [x] `frontend/`
+- [x] `backend/`
+- [x] `judge/`
+- [x] `infra/`
+- [x] `docs/`
 
 완료 기준:
 
-- [ ] 기본 폴더 구조 생성 완료
+- [x] 기본 폴더 구조 생성 완료
 
 ### P0-003. 공통 네이밍 규칙 정의
 
-- [ ] 리소스 prefix
-- [ ] bucket 이름
-- [ ] table 이름
-- [ ] queue 이름
+- [x] 리소스 prefix
+- [x] bucket 이름
+- [x] table 이름
+- [x] queue 이름
 
 완료 기준:
 
-- [ ] 네이밍 규칙 문서화
+- [x] 네이밍 규칙 문서화
 
 ### P0-004. AWS 예산 알림 설정
 
@@ -171,134 +171,134 @@ related:
 
 ### P1-001. Vue 앱 초기화
 
-- [ ] Vue 프로젝트 생성
-- [ ] 기본 lint/format 구성
+- [x] Vue 프로젝트 생성
+- [x] 기본 lint/format 구성
 
 완료 기준:
 
-- [ ] 로컬 실행 가능
+- [x] 로컬 실행 가능
 
 ### P1-002. 라우팅 구성
 
-- [ ] `/login`
-- [ ] `/problems`
-- [ ] `/problems/:problemId`
-- [ ] `/submissions/:submissionId`
-- [ ] `/admin/problems/new`
+- [x] `/login`
+- [x] `/problems`
+- [x] `/problems/:problemId`
+- [x] `/submissions/:submissionId`
+- [x] `/admin/problems/new`
 
 완료 기준:
 
-- [ ] 주요 라우트 진입 가능
+- [x] 주요 라우트 진입 가능
 
 ### P1-003. Cognito 로그인 연결
 
-- [ ] User Pool 생성
-- [ ] 로그인/로그아웃 구현
-- [ ] 보호 라우트 처리
+- [x] User Pool 생성
+- [x] 로그인/로그아웃 구현
+- [x] 보호 라우트 처리
 
 완료 기준:
 
-- [ ] 로그인 성공 후 세션 유지
+- [x] 로그인 성공 후 세션 유지
 
 ### P1-004. 문제 목록/상세 mock UI
 
-- [ ] 목록 화면
-- [ ] 상세 화면
-- [ ] statement 영역
-- [ ] sample 영역
-- [ ] 제출 입력 UI 초안
+- [x] 목록 화면
+- [x] 상세 화면
+- [x] statement 영역
+- [x] sample 영역
+- [x] 제출 입력 UI 초안
 
 완료 기준:
 
-- [ ] mock 기준 화면 사용 가능
+- [x] mock 기준 화면 사용 가능
 
 ## Phase 2. API 및 데이터 모델
 
 ### P2-001. Rust Lambda workspace 구성
 
-- [ ] `public-api`
-- [ ] `admin-api`
-- [ ] `submission-consumer`
-- [ ] 공통 domain/infra crate
+- [x] `public-api`
+- [x] `admin-api`
+- [x] `submission-consumer`
+- [x] 공통 domain/infra crate
 
 완료 기준:
 
-- [ ] 로컬 빌드 성공
+- [x] 로컬 빌드 성공
 
 ### P2-002. core_table 생성
 
-- [ ] problem meta
-- [ ] problem manifest
-- [ ] submission meta
-- [ ] submission result
+- [x] problem meta
+- [x] problem manifest
+- [x] submission meta
+- [x] submission result
 
 완료 기준:
 
-- [ ] DynamoDB table 생성 완료
+- [x] DynamoDB table 생성 완료
 
 ### P2-003. 최소 GSI 구성
 
-- [ ] 내 제출 목록
-- [ ] 상태 모니터링
+- [x] 내 제출 목록
+- [x] 상태 모니터링
 
 완료 기준:
 
-- [ ] GSI 생성 완료
+- [x] GSI 생성 완료
 
 ### P2-004. problem meta 모델 구현
 
-- [ ] title
-- [ ] difficulty
-- [ ] tags
-- [ ] time/memory limit
-- [ ] statement_location
-- [ ] bundle_key
-- [ ] bundle_hash
-- [ ] checker_key
-- [ ] problem_version
+- [x] title
+- [x] difficulty
+- [x] tags
+- [x] time/memory limit
+- [x] statement_location
+- [x] bundle_key
+- [x] bundle_hash
+- [x] checker_key
+- [x] problem_version
 
 완료 기준:
 
-- [ ] problem meta put/get 가능
+- [x] problem meta put/get 가능
 
 ### P2-005. manifest 모델 구현
 
-- [ ] manifest_version
-- [ ] bundle_format
-- [ ] bundle_size_bytes
-- [ ] case_count
-- [ ] checker_hash
+- [x] manifest_version
+- [x] bundle_format
+- [x] bundle_size_bytes
+- [x] case_count
+- [x] checker_hash
 
 완료 기준:
 
-- [ ] manifest put/get 가능
+- [x] manifest put/get 가능
 
 ### P2-009. submission 추적 필드 확정
 
-- [ ] `attempt`
-- [ ] `worker_task_id`
-- [ ] `problem_version`
-- [ ] `manifest_version`
-- [ ] `bundle_hash`
-- [ ] `finalized_at`
+- [x] `attempt`
+- [x] `worker_task_id`
+- [x] `problem_version`
+- [x] `manifest_version`
+- [x] `bundle_hash`
+- [x] `finalized_at`
 
 완료 기준:
 
-- [ ] 결과 추적과 재채점에 필요한 필드가 모델에 반영됨
+- [x] 결과 추적과 재채점에 필요한 필드가 모델에 반영됨
 
 ### P2-006. 문제 조회 API 구현
 
-- [ ] `GET /problems`
-- [ ] `GET /problems/{problemId}`
+- [x] `GET /problems`
+- [x] `GET /problems/{problemId}`
 
 완료 기준:
 
-- [ ] 문제 메타 조회 가능
+- [x] 문제 메타 조회 가능
 
 ### P2-007. statement 조회 API 구현
 
-- [ ] `GET /problems/{problemId}/statement`
-- [ ] S3 markdown fetch 또는 presigned 반환 방식 결정
+- [x] `GET /problems/{problemId}/statement`
+- [x] S3 markdown fetch 또는 presigned 반환 방식 결정
 
 추천:
 
@@ -312,16 +312,16 @@ related:
 
 완료 기준:
 
-- [ ] statement 렌더링 가능
+- [x] statement 렌더링 가능
 
 ### P2-008. 제출 조회 API 구현
 
-- [ ] `GET /submissions/{submissionId}`
-- [ ] `GET /users/me/submissions`
+- [x] `GET /submissions/{submissionId}`
+- [x] `GET /users/me/submissions`
 
 완료 기준:
 
-- [ ] 제출 상태와 목록 조회 가능
+- [x] 제출 상태와 목록 조회 가능
 
 ## Phase 3. 문제 자산 저장과 manifest
 
@@ -762,30 +762,30 @@ related:
 ### Week 1
 
 - [ ] Phase 0 전체
-- [ ] P1-001
-- [ ] P1-002
-- [ ] P1-003
-- [ ] P1-004
+- [x] P1-001
+- [x] P1-002
+- [x] P1-003
+- [x] P1-004
 
 목표:
 
-- [ ] 로그인 가능한 프론트 뼈대 완성
+- [x] 로그인 가능한 프론트 뼈대 완성
 
 ### Week 2
 
-- [ ] P2-001
-- [ ] P2-002
-- [ ] P2-003
-- [ ] P2-004
-- [ ] P2-005
-- [ ] P2-006
-- [ ] P2-007
+- [x] P2-001
+- [x] P2-002
+- [x] P2-003
+- [x] P2-004
+- [x] P2-005
+- [x] P2-006
+- [x] P2-007
 - [ ] P3-001
 - [ ] P3-002
 
 목표:
 
-- [ ] 문제 메타/statement 조회 기반 완성
+- [x] 문제 메타/statement 조회 기반 완성
 
 ### Week 3 이후 우선순위
 

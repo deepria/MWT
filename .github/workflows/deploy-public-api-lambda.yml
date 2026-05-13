@@ -2,6 +2,12 @@ name: Deploy public-api Lambda
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-public-api-lambda.yml'
 
 permissions:
   contents: read

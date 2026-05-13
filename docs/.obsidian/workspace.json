@@ -14,7 +14,7 @@
               "type": "markdown",
               "state": {
                 "file": "20 Execution/Phase 2/Phase 2 - API 및 데이터 모델 상세 설계.md",
-                "mode": "source",
+                "mode": "preview",
                 "source": false
               },
               "icon": "lucide-file",
@@ -184,5 +184,16 @@
     }
   },
   "active": "e5bb112b5258a6f5",
-  "lastOpenFiles": []
+  "lastOpenFiles": [
+    "20 Execution/Phase 2/Phase 2 - 백엔드 CI-CD 세팅 히스토리.md",
+    "20 Execution/Phase 2/Phase 2 - 프론트 CI-CD 세팅 히스토리.md",
+    "20 Execution/Phase 2/Phase 2 - API 및 데이터 모델 상세 설계.md",
+    "20 Execution/mwt-execution-plan-v1.2.md",
+    "20 Execution/Phase 1/Phase 1 - 프론트 기본 뼈대 상세 설계.md",
+    "20 Execution/Phase 0/Phase 0 - 초기 세팅 상세 설계.md",
+    "90 References/mwt-sensitive-config-inventory.md",
+    "10 Architecture/mwt-problem-storage-and-staging-v1.1.md",
+    "10 Architecture/mwt-cost-down-v1.1.md",
+    "10 Architecture/mwt-architecture-v1.3.md"
+  ]
 }

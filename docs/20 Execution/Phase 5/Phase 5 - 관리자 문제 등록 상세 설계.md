@@ -30,6 +30,7 @@ parent_plan: "[[mwt-execution-plan-v1.2]]"
 - P5-004 hidden tests bundle 등록 UI
 - P5-005 관리자 검증 루틴
 - P5-006 관리자 rejudge 경로 설계
+- P5-007 admin-api Lambda CI/CD 구성
 
 ## 추천안
 
@@ -63,8 +64,22 @@ parent_plan: "[[mwt-execution-plan-v1.2]]"
 - 업로드 플로우
 - 검증 결과 표시
 - rejudge 운영 절차
+- admin-api Lambda 배포 workflow
+
+### P5-007 admin-api Lambda CI/CD 구성
+
+- `.github/workflows/deploy-admin-api-lambda.yml` 또는 공통 reusable Lambda deploy workflow를 추가한다.
+- `admin-api`를 Lambda 런타임/아키텍처에 맞게 패키징한다.
+- GitHub Actions OIDC role 권한에 `admin-api` Lambda code update 권한을 추가한다.
+- 첫 배포는 수동 실행으로 검증하고, 이후 `backend/**` 변경 기준 자동 배포 여부를 결정한다.
+
+완료 기준:
+
+- GitHub Actions에서 `admin-api` Lambda를 빌드, 테스트, 패키징, 배포할 수 있다.
+- 배포 후 관리자 권한이 없는 사용자는 접근이 거부되고, admin group 사용자는 관리자 API를 호출할 수 있다.
 
 ## 완료 기준
 
 - 불완전한 문제는 공개할 수 없고, 완전한 문제는 등록 가능하다
 - bundle/checker/limits 변경 후 운영자가 재채점 경로를 사용할 수 있다
+- `admin-api` 변경을 재현 가능한 CI/CD 경로로 개발기 Lambda에 배포할 수 있다
