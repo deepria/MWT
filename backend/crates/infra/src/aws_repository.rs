@@ -93,6 +93,29 @@ impl ProblemRepository for AwsRepository {
             .collect()
     }
 
+    async fn list_all_problems(&self) -> RepositoryResult<Vec<ProblemMeta>> {
+        let output = self
+            .dynamodb
+            .scan()
+            .table_name(&self.table_name)
+            .filter_expression("entity_type = :entity_type")
+            .expression_attribute_values(
+                ":entity_type",
+                AttributeValue::S("problem_meta".to_string()),
+            )
+            .send()
+            .await
+            .map_err(storage_error)?;
+
+        output
+            .items
+            .unwrap_or_default()
+            .into_iter()
+            .map(attribute_map_to_item)
+            .map(|result| result.and_then(|item| map_item(item, problem_meta_from_item)))
+            .collect()
+    }
+
     async fn get_problem(&self, problem_id: &str) -> RepositoryResult<ProblemMeta> {
         let item = self
             .get_required_item(problem_pk(problem_id), problem_meta_sk().to_string())

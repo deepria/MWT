@@ -25,7 +25,7 @@ async function logout() {
 
       <nav v-if="auth.isAuthenticated" class="topnav" aria-label="주요 메뉴">
         <RouterLink :to="{ name: 'problems' }">문제</RouterLink>
-        <RouterLink :to="{ name: 'admin-problem-new' }">관리자</RouterLink>
+        <RouterLink :to="{ name: 'admin-problems' }">관리자</RouterLink>
       </nav>
 
       <div class="session-area">

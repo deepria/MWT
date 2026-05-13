@@ -64,6 +64,14 @@ Lambda settings:
 - `GET /submissions/{submissionId}`
 - `GET /users/me/submissions`
 
+## Admin API Scope
+
+- `GET /admin/problems`
+- `POST /admin/problems`
+- `GET /admin/problems/{problemId}`
+- `POST /admin/problems/{problemId}/assets/presign`
+- `POST /admin/problems/{problemId}/bundle/finalize`
+
 ## AWS Resources
 
 - DynamoDB table: `mwt-core-table-prod`
@@ -74,6 +82,10 @@ The Lambda execution role needs `s3:GetObject` on:
 ```text
 arn:aws:s3:::mwt-assets-prod-123456789012-ap-northeast-2-example/*
 ```
+
+The admin Lambda execution role additionally needs DynamoDB read/write actions
+for problem metadata and manifests, including `dynamodb:Scan` for the admin
+problem list.
 
 ## Lambda CI/CD
 

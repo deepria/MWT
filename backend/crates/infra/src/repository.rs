@@ -36,6 +36,7 @@ pub struct FinalizedProblemBundle {
 #[async_trait]
 pub trait ProblemRepository: Send + Sync {
     async fn list_public_problems(&self) -> RepositoryResult<Vec<ProblemMeta>>;
+    async fn list_all_problems(&self) -> RepositoryResult<Vec<ProblemMeta>>;
     async fn get_problem(&self, problem_id: &str) -> RepositoryResult<ProblemMeta>;
     async fn get_manifest(
         &self,

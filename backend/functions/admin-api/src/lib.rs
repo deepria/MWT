@@ -82,11 +82,23 @@ where
         .collect::<Vec<_>>();
 
     match (method, segments.as_slice()) {
+        ("GET", ["admin", "problems"]) => {
+            if let Some(response) = require_admin(&request) {
+                return response;
+            }
+            list_admin_problems(&repository).await
+        }
         ("POST", ["admin", "problems"]) => {
             if let Some(response) = require_admin(&request) {
                 return response;
             }
             create_problem(&request, &repository, &assets_bucket).await
+        }
+        ("GET", ["admin", "problems", problem_id]) => {
+            if let Some(response) = require_admin(&request) {
+                return response;
+            }
+            get_admin_problem(&repository, problem_id).await
         }
         ("POST", ["admin", "problems", problem_id, "assets", "presign"]) => {
             if let Some(response) = require_admin(&request) {
@@ -107,6 +119,33 @@ where
             },
         ),
     }
+}
+
+async fn list_admin_problems<R>(repository: &R) -> Result<Response<Body>, Error>
+where
+    R: ProblemRepository,
+{
+    let mut problems = repository.list_all_problems().await?;
+    problems.sort_by(|left, right| left.problem_id.cmp(&right.problem_id));
+
+    json_response(StatusCode::OK, &problems)
+}
+
+async fn get_admin_problem<R>(repository: &R, problem_id: &str) -> Result<Response<Body>, Error>
+where
+    R: ProblemRepository,
+{
+    if !is_safe_segment(problem_id) {
+        return bad_request("invalid problem id");
+    }
+
+    let problem = match repository.get_problem(problem_id).await {
+        Ok(problem) => problem,
+        Err(RepositoryError::NotFound(_)) => return not_found("problem not found"),
+        Err(error) => return Err(error.into()),
+    };
+
+    json_response(StatusCode::OK, &problem)
 }
 
 async fn create_problem<R>(
@@ -601,6 +640,52 @@ mod tests {
     use super::*;
     use lambda_http::http::{HeaderName, HeaderValue, Method};
     use mwt_infra::memory::MemoryRepository;
+
+    #[tokio::test]
+    async fn lists_admin_problems_for_admin() {
+        let request = request(
+            Method::GET,
+            "/admin/problems",
+            &[("x-mwt-user-id", "admin-user"), ("x-mwt-groups", "admin")],
+            "",
+        );
+
+        let response = handle_request(
+            request,
+            MemoryRepository::default(),
+            "mwt-assets-test".to_string(),
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = body_text_from_response(response);
+        assert!(body.contains(r#""problem_id":"sum-path""#));
+        assert!(body.contains(r#""visibility":"public""#));
+    }
+
+    #[tokio::test]
+    async fn gets_admin_problem_for_admin() {
+        let request = request(
+            Method::GET,
+            "/admin/problems/sum-path",
+            &[("x-mwt-user-id", "admin-user"), ("x-mwt-groups", "admin")],
+            "",
+        );
+
+        let response = handle_request(
+            request,
+            MemoryRepository::default(),
+            "mwt-assets-test".to_string(),
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = body_text_from_response(response);
+        assert!(body.contains(r#""problem_id":"sum-path""#));
+        assert!(body.contains(r#""manifest_version":1"#));
+    }
 
     #[tokio::test]
     async fn presigns_statement_upload_for_admin() {

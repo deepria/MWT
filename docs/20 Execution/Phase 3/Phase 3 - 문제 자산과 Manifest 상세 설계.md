@@ -185,13 +185,16 @@ Bucket 구성:
 
 #### 문제 메타 생성
 
-Phase 3 리허설용으로 최소 문제 메타 생성 endpoint를 먼저 구현한다.
-관리자 UI는 Phase 5 범위로 남긴다.
+Phase 3 리허설용으로 문제 메타 생성과 관리자 조회 endpoint를 먼저 구현한다.
+참가자용 `/problems` 목록은 `visibility=public`만 반환하므로, `draft` 문제 확인과
+나중 업로드를 위해 관리자 전용 목록/상세 API를 별도로 둔다.
 
 Endpoint:
 
 ```text
+GET /admin/problems
 POST /admin/problems
+GET /admin/problems/{problem_id}
 ```
 
 요청 예시:
@@ -219,7 +222,8 @@ POST /admin/problems
 #### 자산 presign
 
 P3-003/P3-004에서 `admin-api`에 관리자 전용 presign endpoint를 추가한다.
-2026-05-13 기준 로컬 handler와 unit test는 구현됐고, 개발기 Lambda 배포와 실제 S3 PUT 검증은 남아 있다.
+presigned URL은 짧게 살아야 하므로 문제 메타 등록 시점이 아니라 실제 업로드 버튼을
+누르는 시점에 새로 발급한다.
 
 Endpoint:
 
@@ -232,9 +236,7 @@ POST /admin/problems/{problem_id}/assets/presign
 ```json
 {
   "asset_type": "bundle",
-  "file_name": "tests-v1.zip",
-  "content_type": "application/zip",
-  "sha256": "..."
+  "content_type": "application/zip"
 }
 ```
 

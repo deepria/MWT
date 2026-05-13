@@ -40,8 +40,9 @@ parent_plan: "[[mwt-execution-plan-v1.2]]"
 
 ### Phase 3 선구현 항목
 
-Phase 3 리허설을 위해 `POST /admin/problems` 최소 API는 먼저 구현했다.
-Phase 5에서는 이 API를 사용하는 관리자 UI와 검증 루틴을 완성한다.
+Phase 3 리허설을 위해 관리자 문제 메타 등록, 관리자 목록/상세 조회,
+bundle presign/finalize UI를 먼저 구현했다.
+Phase 5에서는 statement/sample 업로드, 검증 루틴, 공개 전환 정책을 완성한다.
 
 ### 관리자 권한
 
@@ -49,11 +50,11 @@ Phase 5에서는 이 API를 사용하는 관리자 UI와 검증 루틴을 완성
 
 ### 등록 플로우
 
-1. 메타 등록
-2. statement/sample 업로드
-3. bundle 업로드
-4. manifest 입력 또는 검증
-5. 공개 가능 여부 판정
+1. `/admin/problems/new`에서 메타만 먼저 등록
+2. `/admin/problems`에서 draft 포함 관리자 문제 목록 확인
+3. `/admin/problems/{problem_id}` 상세 화면에서 업로드 시점에 presigned URL 발급
+4. bundle 업로드 후 manifest cases와 hash/size로 finalize
+5. statement/sample 업로드와 공개 가능 여부 판정
 
 ### rejudge 운영 플로우
 

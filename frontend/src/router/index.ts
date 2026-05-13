@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 import { useAuthStore } from '@/stores/auth'
+import AdminProblemDetailView from '@/views/AdminProblemDetailView.vue'
+import AdminProblemListView from '@/views/AdminProblemListView.vue'
 import AdminProblemNewView from '@/views/AdminProblemNewView.vue'
 import AuthCallbackView from '@/views/AuthCallbackView.vue'
 import LoginView from '@/views/LoginView.vue'
@@ -45,9 +47,20 @@ const router = createRouter({
       props: true,
     },
     {
+      path: '/admin/problems',
+      name: 'admin-problems',
+      component: AdminProblemListView,
+    },
+    {
       path: '/admin/problems/new',
       name: 'admin-problem-new',
       component: AdminProblemNewView,
+    },
+    {
+      path: '/admin/problems/:problemId',
+      name: 'admin-problem-detail',
+      component: AdminProblemDetailView,
+      props: true,
     },
   ],
 })

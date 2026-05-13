@@ -14,6 +14,14 @@ interface ApiProblem {
   tags: string[]
   time_limit_ms: number
   memory_limit_mb: number
+  visibility?: 'draft' | 'public' | 'archived'
+  statement_location?: string
+  bundle_key?: string | null
+  bundle_hash?: string | null
+  checker_key?: string | null
+  checker_hash?: string | null
+  problem_version?: number
+  manifest_version?: number | null
 }
 
 interface CreateProblemRequest {
@@ -67,6 +75,23 @@ interface FinalizeBundleResponse {
   manifest_version: number
   bundle_key: string
   bundle_hash: string
+}
+
+export interface AdminProblem {
+  id: string
+  title: string
+  difficulty: Difficulty
+  tags: string[]
+  timeLimitMs: number
+  memoryLimitMb: number
+  visibility: 'draft' | 'public' | 'archived'
+  statementLocation: string
+  bundleKey: string | null
+  bundleHash: string | null
+  checkerKey: string | null
+  checkerHash: string | null
+  problemVersion: number
+  manifestVersion: number | null
 }
 
 interface ApiStatement {
@@ -185,6 +210,25 @@ function toProblem(problem: ApiProblem): Problem {
   }
 }
 
+function toAdminProblem(problem: ApiProblem): AdminProblem {
+  return {
+    id: problem.problem_id,
+    title: problem.title,
+    difficulty: problem.difficulty,
+    tags: problem.tags,
+    timeLimitMs: problem.time_limit_ms,
+    memoryLimitMb: problem.memory_limit_mb,
+    visibility: problem.visibility ?? 'draft',
+    statementLocation: problem.statement_location ?? '',
+    bundleKey: problem.bundle_key ?? null,
+    bundleHash: problem.bundle_hash ?? null,
+    checkerKey: problem.checker_key ?? null,
+    checkerHash: problem.checker_hash ?? null,
+    problemVersion: problem.problem_version ?? 1,
+    manifestVersion: problem.manifest_version ?? null,
+  }
+}
+
 function toStatement(statement: ApiStatement): ProblemStatement {
   return {
     problemId: statement.problem_id,
@@ -250,12 +294,31 @@ export async function listMySubmissions() {
 }
 
 export async function createAdminProblem(problem: CreateProblemRequest) {
-  return toProblem(
+  return toAdminProblem(
     await request<ApiProblem>('/admin/problems', {
       auth: true,
       method: 'POST',
       body: problem,
     }),
+  )
+}
+
+export async function listAdminProblems() {
+  const problems = await request<ApiProblem[]>('/admin/problems', {
+    auth: true,
+  })
+
+  return problems.map(toAdminProblem)
+}
+
+export async function getAdminProblem(problemId: string) {
+  return toAdminProblem(
+    await request<ApiProblem>(
+      `/admin/problems/${encodeURIComponent(problemId)}`,
+      {
+        auth: true,
+      },
+    ),
   )
 }
 

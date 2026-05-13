@@ -103,6 +103,10 @@ impl ProblemRepository for MemoryRepository {
             .collect())
     }
 
+    async fn list_all_problems(&self) -> RepositoryResult<Vec<ProblemMeta>> {
+        Ok(self.problems.clone())
+    }
+
     async fn get_problem(&self, problem_id: &str) -> RepositoryResult<ProblemMeta> {
         self.problems
             .iter()

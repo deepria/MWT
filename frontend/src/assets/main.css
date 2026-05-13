@@ -203,6 +203,9 @@ textarea {
 }
 
 .primary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 46px;
   border: 0;
   border-radius: 8px;
@@ -256,6 +259,10 @@ textarea {
   gap: 8px;
 }
 
+.page-action {
+  justify-self: start;
+}
+
 .problem-list {
   display: grid;
   overflow: hidden;
@@ -306,6 +313,19 @@ textarea {
   padding: 5px 8px;
   border-radius: 8px;
   background: #edf2ef;
+}
+
+.tag-list .status-pill,
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 4px 9px;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  background: #5b675f;
 }
 
 .difficulty-badge {
@@ -399,6 +419,32 @@ pre {
 
 .admin-form {
   max-width: 860px;
+}
+
+.admin-summary {
+  display: grid;
+  gap: 16px;
+  max-width: 860px;
+  padding: 20px;
+  border: 1px solid #dce5df;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.admin-summary h2 {
+  margin: 10px 0 6px;
+  color: #142721;
+  font-size: 26px;
+}
+
+.admin-summary p {
+  margin: 0;
+  color: #65736e;
+}
+
+.compact-list {
+  max-width: none;
+  margin: 0;
 }
 
 .section-heading,
