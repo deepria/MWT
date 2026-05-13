@@ -16,6 +16,15 @@ interface ApiProblem {
   memory_limit_mb: number
 }
 
+interface CreateProblemRequest {
+  problem_id: string
+  title: string
+  difficulty: Difficulty
+  tags: string[]
+  time_limit_ms: number
+  memory_limit_mb: number
+}
+
 interface ApiStatement {
   problem_id: string
   format: 'markdown'
@@ -52,7 +61,14 @@ function requireApiBaseUrl() {
   return apiBaseUrl
 }
 
-async function request<T>(path: string, options: { auth?: boolean } = {}) {
+async function request<T>(
+  path: string,
+  options: {
+    auth?: boolean
+    method?: string
+    body?: unknown
+  } = {},
+) {
   const headers = new Headers()
 
   if (options.auth) {
@@ -60,18 +76,57 @@ async function request<T>(path: string, options: { auth?: boolean } = {}) {
 
     if (token) {
       headers.set('authorization', `Bearer ${token}`)
+    } else {
+      setMockAuthHeaders(headers)
     }
   }
 
+  if (options.body !== undefined) {
+    headers.set('content-type', 'application/json')
+  }
+
   const response = await window.fetch(`${requireApiBaseUrl()}${path}`, {
+    method: options.method ?? 'GET',
     headers,
+    body:
+      options.body === undefined ? undefined : JSON.stringify(options.body),
   })
 
   if (!response.ok) {
-    throw new Error(`API 요청 실패: ${response.status}`)
+    throw new Error(await responseErrorMessage(response))
   }
 
   return (await response.json()) as T
+}
+
+async function responseErrorMessage(response: Response) {
+  try {
+    const body = (await response.json()) as { message?: string }
+    return body.message ?? `API 요청 실패: ${response.status}`
+  } catch {
+    return `API 요청 실패: ${response.status}`
+  }
+}
+
+function setMockAuthHeaders(headers: Headers) {
+  if ((import.meta.env.VITE_AUTH_PROVIDER ?? 'mock') !== 'mock') return
+
+  const raw = window.localStorage.getItem('mwt.auth.session')
+  if (!raw) return
+
+  try {
+    const user = JSON.parse(raw) as {
+      id?: string
+      email?: string
+      groups?: string[]
+    }
+
+    if (user.id) headers.set('x-mwt-user-id', user.id)
+    if (user.email) headers.set('x-mwt-email', user.email)
+    if (user.groups?.length) headers.set('x-mwt-groups', user.groups.join(','))
+  } catch {
+    // Ignore malformed local mock sessions.
+  }
 }
 
 function toProblem(problem: ApiProblem): Problem {
@@ -149,4 +204,14 @@ export async function listMySubmissions() {
   )
 
   return submissions.map((submission) => toSubmissionSummary(submission))
+}
+
+export async function createAdminProblem(problem: CreateProblemRequest) {
+  return toProblem(
+    await request<ApiProblem>('/admin/problems', {
+      auth: true,
+      method: 'POST',
+      body: problem,
+    }),
+  )
 }

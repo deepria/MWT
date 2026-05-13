@@ -225,6 +225,26 @@ textarea {
   line-height: 1.5;
 }
 
+.success-panel {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid #b9d7c8;
+  border-radius: 8px;
+  color: #173d31;
+  background: #edf7f1;
+}
+
+.success-panel span {
+  color: #52605b;
+  font-size: 14px;
+}
+
+.success-panel a {
+  color: #126b61;
+  font-weight: 800;
+}
+
 .auth-note {
   margin: 0;
   color: #52605b;
