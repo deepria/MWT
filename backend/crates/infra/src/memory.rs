@@ -7,7 +7,9 @@ use mwt_domain::submission::{
 };
 
 use crate::repository::{
-    ProblemRepository, RepositoryError, RepositoryResult, StatementRepository, SubmissionRepository,
+    AssetUploadRepository, FinalizedProblemBundle, ObjectMetadata, PresignedUpload,
+    ProblemAssetRepository, ProblemRepository, RepositoryError, RepositoryResult,
+    StatementRepository, SubmissionRepository,
 };
 
 #[derive(Debug, Clone)]
@@ -132,6 +134,65 @@ impl StatementRepository for MemoryRepository {
         } else {
             Err(RepositoryError::NotFound(statement_location.to_string()))
         }
+    }
+}
+
+#[async_trait]
+impl AssetUploadRepository for MemoryRepository {
+    async fn presign_put_object(
+        &self,
+        bucket: &str,
+        key: &str,
+        _content_type: &str,
+        expires_in_seconds: u64,
+    ) -> RepositoryResult<PresignedUpload> {
+        Ok(PresignedUpload {
+            bucket: bucket.to_string(),
+            key: key.to_string(),
+            upload_url: format!("https://example.com/{bucket}/{key}"),
+            expires_in_seconds,
+        })
+    }
+
+    async fn head_object(&self, _bucket: &str, key: &str) -> RepositoryResult<ObjectMetadata> {
+        if key.contains("missing") {
+            return Err(RepositoryError::NotFound(key.to_string()));
+        }
+
+        Ok(ObjectMetadata { size_bytes: 1024 })
+    }
+}
+
+#[async_trait]
+impl ProblemAssetRepository for MemoryRepository {
+    async fn create_problem(&self, problem: ProblemMeta) -> RepositoryResult<ProblemMeta> {
+        if self
+            .problems
+            .iter()
+            .any(|existing| existing.problem_id == problem.problem_id)
+        {
+            return Err(RepositoryError::Storage(format!(
+                "problem already exists: {}",
+                problem.problem_id
+            )));
+        }
+
+        Ok(problem)
+    }
+
+    async fn finalize_problem_bundle(
+        &self,
+        mut problem: ProblemMeta,
+        manifest: ProblemManifest,
+    ) -> RepositoryResult<FinalizedProblemBundle> {
+        problem.bundle_key = Some(manifest.bundle_key.clone());
+        problem.bundle_hash = Some(manifest.bundle_hash.clone());
+        problem.checker_key = manifest.checker_key.clone();
+        problem.checker_hash = manifest.checker_hash.clone();
+        problem.problem_version = manifest.problem_version;
+        problem.manifest_version = Some(manifest.manifest_version);
+
+        Ok(FinalizedProblemBundle { problem, manifest })
     }
 }
 

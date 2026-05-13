@@ -1,0 +1,159 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: MWT S3 buckets for problem assets and judge logs.
+
+Parameters:
+  Environment:
+    Type: String
+    Default: prod
+    AllowedValues:
+      - prod
+  CreateAssetsBucket:
+    Type: String
+    Default: "false"
+    AllowedValues:
+      - "true"
+      - "false"
+    Description: Set true only for new environments. The current prod assets bucket already exists.
+  AssetsBucketName:
+    Type: String
+    Default: "mwt-assets-prod-123456789012-ap-northeast-2-example"
+    Description: Existing or new assets bucket name. Existing buckets are not managed unless imported into the stack.
+  LogsBucketName:
+    Type: String
+    Default: ""
+    Description: Optional explicit logs bucket name. Leave empty to let CloudFormation generate one.
+  AllowedCorsOrigins:
+    Type: CommaDelimitedList
+    Default: "http://localhost:5173"
+    Description: Comma-separated origins allowed to use presigned browser uploads.
+  LogsRetentionDays:
+    Type: Number
+    Default: 180
+    MinValue: 1
+    MaxValue: 365
+
+Conditions:
+  ShouldCreateAssetsBucket: !Equals [!Ref CreateAssetsBucket, "true"]
+  HasLogsBucketName: !Not [!Equals [!Ref LogsBucketName, ""]]
+
+Resources:
+  ProblemAssetsBucket:
+    Condition: ShouldCreateAssetsBucket
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref AssetsBucketName
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      CorsConfiguration:
+        CorsRules:
+          - AllowedOrigins: !Ref AllowedCorsOrigins
+            AllowedMethods:
+              - GET
+              - HEAD
+              - PUT
+            AllowedHeaders:
+              - "*"
+            ExposedHeaders:
+              - ETag
+            MaxAge: 300
+      LifecycleConfiguration:
+        Rules:
+          - Id: AbortIncompleteMultipartUploads
+            Status: Enabled
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 1
+      Tags:
+        - Key: app
+          Value: mwt
+        - Key: environment
+          Value: !Ref Environment
+        - Key: purpose
+          Value: problem-assets
+
+  JudgeLogsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !If [HasLogsBucketName, !Ref LogsBucketName, !Ref AWS::NoValue]
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireJudgeLogs
+            Status: Enabled
+            ExpirationInDays: !Ref LogsRetentionDays
+          - Id: AbortIncompleteMultipartUploads
+            Status: Enabled
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 1
+      Tags:
+        - Key: app
+          Value: mwt
+        - Key: environment
+          Value: !Ref Environment
+        - Key: purpose
+          Value: judge-logs
+
+  ProblemAssetsBucketPolicy:
+    Condition: ShouldCreateAssetsBucket
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ProblemAssetsBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: "*"
+            Action: "s3:*"
+            Resource:
+              - !GetAtt ProblemAssetsBucket.Arn
+              - !Sub "${ProblemAssetsBucket.Arn}/*"
+            Condition:
+              Bool:
+                aws:SecureTransport: "false"
+
+  JudgeLogsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref JudgeLogsBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: "*"
+            Action: "s3:*"
+            Resource:
+              - !GetAtt JudgeLogsBucket.Arn
+              - !Sub "${JudgeLogsBucket.Arn}/*"
+            Condition:
+              Bool:
+                aws:SecureTransport: "false"
+
+Outputs:
+  ProblemAssetsBucketName:
+    Condition: ShouldCreateAssetsBucket
+    Value: !Ref ProblemAssetsBucket
+  ProblemAssetsBucketArn:
+    Condition: ShouldCreateAssetsBucket
+    Value: !GetAtt ProblemAssetsBucket.Arn
+  JudgeLogsBucketName:
+    Value: !Ref JudgeLogsBucket
+  JudgeLogsBucketArn:
+    Value: !GetAtt JudgeLogsBucket.Arn

@@ -156,7 +156,7 @@ related:
 
 ### S3
 
-- logs bucket lifecycle 7일 또는 30일
+- logs bucket lifecycle 180일
 - 문제 자산만 장기 보관
 - 제출 산출물은 짧게 보관
 

@@ -88,10 +88,10 @@ Amplify 환경변수에 프론트 빌드 타임 값을 추가했다.
 ```text
 AMPLIFY_MONOREPO_APP_ROOT=frontend
 AMPLIFY_DIFF_DEPLOY=false
-VITE_API_BASE_URL=https://u7ujxks9n0.execute-api.ap-northeast-2.amazonaws.com
+VITE_API_BASE_URL=https://abcdef1234.execute-api.ap-northeast-2.amazonaws.com
 VITE_AUTH_PROVIDER=cognito
 VITE_COGNITO_CLIENT_ID=<COGNITO_APP_CLIENT_ID>
-VITE_COGNITO_DOMAIN=https://ap-northeast-2nghei1pee.auth.ap-northeast-2.amazoncognito.com
+VITE_COGNITO_DOMAIN=https://mwt-example.auth.ap-northeast-2.amazoncognito.com
 VITE_COGNITO_SCOPES=openid email profile
 VITE_COGNITO_REDIRECT_SIGN_IN=https://main.dt3yir3oksp8j.amplifyapp.com/auth/callback
 VITE_COGNITO_REDIRECT_SIGN_OUT=https://main.dt3yir3oksp8j.amplifyapp.com/login
@@ -243,7 +243,7 @@ https://cognito-idp.ap-northeast-2.amazonaws.com/<USER_POOL_ID>
 프론트에서 사용하는 값은 Hosted UI domain이다.
 
 ```text
-https://ap-northeast-2nghei1pee.auth.ap-northeast-2.amazoncognito.com
+https://mwt-example.auth.ap-northeast-2.amazoncognito.com
 ```
 
 코드는 이 domain에 `/oauth2/authorize`, `/oauth2/token`, `/logout`을 붙여 사용한다.

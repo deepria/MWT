@@ -1,23 +1,28 @@
 use std::collections::HashMap;
+use std::time::Duration;
 
 use async_trait::async_trait;
 use aws_sdk_dynamodb::types::AttributeValue;
 use aws_sdk_dynamodb::Client as DynamoDbClient;
+use aws_sdk_s3::presigning::PresigningConfig;
 use aws_sdk_s3::Client as S3Client;
 use mwt_domain::problem::{ProblemManifest, ProblemMeta};
 use mwt_domain::submission::{SubmissionDetail, SubmissionMeta};
 use serde_json::{Map, Number, Value};
 
 use crate::dynamodb_item::{
-    problem_manifest_from_item, problem_meta_from_item, submission_meta_from_item,
-    submission_result_summary_from_item, DynamoItem,
+    problem_manifest_from_item, problem_manifest_to_item, problem_meta_from_item,
+    problem_meta_to_item, submission_meta_from_item, submission_result_summary_from_item,
+    DynamoItem,
 };
 use crate::dynamodb_keys::{
     problem_manifest_sk, problem_meta_sk, problem_pk, submission_meta_sk, submission_pk,
     user_submissions_pk, CORE_TABLE_NAME, USER_SUBMISSIONS_INDEX,
 };
 use crate::repository::{
-    ProblemRepository, RepositoryError, RepositoryResult, StatementRepository, SubmissionRepository,
+    AssetUploadRepository, FinalizedProblemBundle, ObjectMetadata, PresignedUpload,
+    ProblemAssetRepository, ProblemRepository, RepositoryError, RepositoryResult,
+    StatementRepository, SubmissionRepository,
 };
 use crate::s3_location::S3Location;
 
@@ -134,6 +139,116 @@ impl StatementRepository for AwsRepository {
 
         String::from_utf8(bytes.to_vec())
             .map_err(|error| RepositoryError::Storage(error.to_string()))
+    }
+}
+
+#[async_trait]
+impl AssetUploadRepository for AwsRepository {
+    async fn presign_put_object(
+        &self,
+        bucket: &str,
+        key: &str,
+        content_type: &str,
+        expires_in_seconds: u64,
+    ) -> RepositoryResult<PresignedUpload> {
+        let presigning_config =
+            PresigningConfig::expires_in(Duration::from_secs(expires_in_seconds))
+                .map_err(storage_error)?;
+        let request = self
+            .s3
+            .put_object()
+            .bucket(bucket)
+            .key(key)
+            .content_type(content_type)
+            .presigned(presigning_config)
+            .await
+            .map_err(storage_error)?;
+
+        Ok(PresignedUpload {
+            bucket: bucket.to_string(),
+            key: key.to_string(),
+            upload_url: request.uri().to_string(),
+            expires_in_seconds,
+        })
+    }
+
+    async fn head_object(&self, bucket: &str, key: &str) -> RepositoryResult<ObjectMetadata> {
+        let output = self
+            .s3
+            .head_object()
+            .bucket(bucket)
+            .key(key)
+            .send()
+            .await
+            .map_err(storage_error)?;
+        let content_length = output.content_length().ok_or_else(|| {
+            RepositoryError::Storage("S3 object has no content length".to_string())
+        })?;
+
+        u64::try_from(content_length)
+            .map(|size_bytes| ObjectMetadata { size_bytes })
+            .map_err(|error| RepositoryError::Storage(error.to_string()))
+    }
+}
+
+#[async_trait]
+impl ProblemAssetRepository for AwsRepository {
+    async fn create_problem(&self, problem: ProblemMeta) -> RepositoryResult<ProblemMeta> {
+        let item = item_to_attribute_map(
+            problem_meta_to_item(&problem)
+                .map_err(|error| RepositoryError::Storage(error.to_string()))?,
+        )?;
+
+        self.dynamodb
+            .put_item()
+            .table_name(&self.table_name)
+            .set_item(Some(item))
+            .condition_expression("attribute_not_exists(pk)")
+            .send()
+            .await
+            .map_err(storage_error)?;
+
+        Ok(problem)
+    }
+
+    async fn finalize_problem_bundle(
+        &self,
+        mut problem: ProblemMeta,
+        manifest: ProblemManifest,
+    ) -> RepositoryResult<FinalizedProblemBundle> {
+        problem.bundle_key = Some(manifest.bundle_key.clone());
+        problem.bundle_hash = Some(manifest.bundle_hash.clone());
+        problem.checker_key = manifest.checker_key.clone();
+        problem.checker_hash = manifest.checker_hash.clone();
+        problem.problem_version = manifest.problem_version;
+        problem.manifest_version = Some(manifest.manifest_version);
+
+        let manifest_attributes = item_to_attribute_map(
+            problem_manifest_to_item(&manifest)
+                .map_err(|error| RepositoryError::Storage(error.to_string()))?,
+        )?;
+        let problem_attributes = item_to_attribute_map(
+            problem_meta_to_item(&problem)
+                .map_err(|error| RepositoryError::Storage(error.to_string()))?,
+        )?;
+
+        self.dynamodb
+            .put_item()
+            .table_name(&self.table_name)
+            .set_item(Some(manifest_attributes))
+            .send()
+            .await
+            .map_err(storage_error)?;
+
+        self.dynamodb
+            .put_item()
+            .table_name(&self.table_name)
+            .set_item(Some(problem_attributes))
+            .send()
+            .await
+            .map_err(storage_error)?;
+
+        Ok(FinalizedProblemBundle { problem, manifest })
     }
 }
 

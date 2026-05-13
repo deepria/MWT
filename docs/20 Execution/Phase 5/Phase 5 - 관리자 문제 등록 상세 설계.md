@@ -38,6 +38,11 @@ parent_plan: "[[mwt-execution-plan-v1.2]]"
 
 ## 상세 설계
 
+### Phase 3 선구현 항목
+
+Phase 3 리허설을 위해 `POST /admin/problems` 최소 API는 먼저 구현했다.
+Phase 5에서는 이 API를 사용하는 관리자 UI와 검증 루틴을 완성한다.
+
 ### 관리자 권한
 
 - Cognito group 기반

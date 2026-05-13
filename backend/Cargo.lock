@@ -1673,9 +1673,16 @@ dependencies = [
 name = "mwt-admin-api"
 version = "0.1.0"
 dependencies = [
+ "aws-config",
+ "aws-sdk-dynamodb",
+ "aws-sdk-s3",
  "lambda_http",
  "mwt-domain",
+ "mwt-infra",
+ "serde",
+ "serde_json",
  "tokio",
+ "tracing",
  "tracing-subscriber",
 ]
 

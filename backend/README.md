@@ -7,7 +7,7 @@ Rust Lambda workspace for Phase 2.
 - `crates/domain`: shared API and persistence models
 - `crates/infra`: repository traits, in-memory adapter, DynamoDB key helpers
 - `functions/public-api`: public/user-facing query API
-- `functions/admin-api`: admin API placeholder
+- `functions/admin-api`: admin problem metadata, asset presign, and bundle finalize API
 - `functions/submission-consumer`: submission worker dispatcher placeholder
 
 ## Local Checks

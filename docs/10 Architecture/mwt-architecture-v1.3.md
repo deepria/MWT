@@ -303,7 +303,7 @@ testcase, checker, limits 변경은 운영 절차로 문서화한다.
 ### 필수 보존 정책
 
 - CloudWatch Logs retention 7일
-- logs bucket lifecycle 7일 또는 30일
+- logs bucket lifecycle 180일
 - 오래된 제출 산출물 자동 삭제
 
 ## 12. 비용 원칙

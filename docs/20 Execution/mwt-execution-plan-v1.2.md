@@ -327,27 +327,27 @@ related:
 
 ### P3-001. S3 bucket 생성
 
-- [ ] assets bucket
-- [ ] logs bucket
+- [x] assets bucket
+- [x] logs bucket
 
 완료 기준:
 
-- [ ] bucket 생성 완료
+- [x] bucket 생성 완료
 
 ### P3-002. 문제 자산 prefix 설계
 
-- [ ] statement 경로
-- [ ] sample 경로
-- [ ] bundle 경로
-- [ ] checker 경로
+- [x] statement 경로
+- [x] sample 경로
+- [x] bundle 경로
+- [x] checker 경로
 
 완료 기준:
 
-- [ ] 경로 규칙 문서화
+- [x] 경로 규칙 문서화
 
 ### P3-003. statement 업로드 presign API
 
-- [ ] 관리자용 업로드 presign 발급
+- [x] 관리자용 업로드 presign 발급
 
 완료 기준:
 
@@ -355,7 +355,7 @@ related:
 
 ### P3-004. sample 업로드 presign API
 
-- [ ] sample input/output 업로드 가능
+- [x] sample input/output presign 발급 가능
 
 완료 기준:
 
@@ -363,8 +363,8 @@ related:
 
 ### P3-005. hidden tests bundle 규격 정의
 
-- [ ] zip 또는 tar.zst 선택
-- [ ] bundle 내부 디렉터리 규칙 정의
+- [x] zip 또는 tar.zst 선택
+- [x] bundle 내부 디렉터리 규칙 정의
 
 추천:
 
@@ -378,15 +378,15 @@ related:
 
 완료 기준:
 
-- [ ] bundle 포맷 확정
+- [x] bundle 포맷 확정
 
 ### P3-006. manifest 스키마 확정
 
-- [ ] bundle_key
-- [ ] bundle_hash
-- [ ] case_count
-- [ ] weight
-- [ ] checker 정보
+- [x] bundle_key
+- [x] bundle_hash
+- [x] case_count
+- [x] weight
+- [x] checker 정보
 
 추천:
 
@@ -400,16 +400,16 @@ related:
 
 완료 기준:
 
-- [ ] manifest JSON 예시 확정
+- [x] manifest JSON 예시 확정
 
 ### P3-007. bundle finalize API 구현
 
-- [ ] 업로드 완료 후 manifest 저장
-- [ ] problem_version 증가
+- [x] 업로드 완료 후 manifest 저장
+- [x] problem_version 증가
 
 완료 기준:
 
-- [ ] 관리자 자산 등록 완료 처리 가능
+- [x] 관리자 자산 등록 완료 처리 가능
 
 ## Phase 4. 제출 및 채점 파이프라인
 
@@ -780,8 +780,8 @@ related:
 - [x] P2-005
 - [x] P2-006
 - [x] P2-007
-- [ ] P3-001
-- [ ] P3-002
+- [x] P3-001
+- [x] P3-002
 
 목표:
 

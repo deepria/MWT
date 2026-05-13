@@ -9,8 +9,8 @@ async fn main() -> Result<(), Error> {
     tracing_subscriber::fmt().json().init();
 
     let config = aws_config::load_defaults(BehaviorVersion::latest()).await;
-    let table_name =
-        env::var("MWT_CORE_TABLE_NAME").unwrap_or_else(|_| "mwt-core-table-prod".to_string());
+    let table_name = env::var("MWT_CORE_TABLE_NAME")
+        .expect("MWT_CORE_TABLE_NAME environment variable is required");
     let repository = AwsRepository::new(
         aws_sdk_dynamodb::Client::new(&config),
         aws_sdk_s3::Client::new(&config),
