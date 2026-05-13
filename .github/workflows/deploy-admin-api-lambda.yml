@@ -1,0 +1,93 @@
+name: Deploy admin-api Lambda
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-admin-api-lambda.yml'
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: admin-api-lambda-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  AWS_REGION: ap-northeast-2
+  LAMBDA_FUNCTION_NAME: ${{ vars.ADMIN_API_LAMBDA_FUNCTION_NAME || 'mwt-admin-api' }}
+  LAMBDA_ZIP_PATH: backend/target/lambda/admin-api-arm64.zip
+
+jobs:
+  deploy:
+    name: Build and deploy admin-api
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-unknown-linux-gnu
+
+      - name: Install Zig
+        uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.15.2
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: backend
+
+      - name: Install cargo-zigbuild
+        run: |
+          if ! command -v cargo-zigbuild >/dev/null 2>&1; then
+            cargo install cargo-zigbuild --locked
+          fi
+
+      - name: Check Rust formatting
+        working-directory: backend
+        run: cargo fmt --all --check
+
+      - name: Test backend
+        working-directory: backend
+        run: cargo test
+
+      - name: Package admin-api for Lambda ARM64
+        run: bash backend/scripts/package-admin-api.sh
+
+      - name: Upload Lambda package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: admin-api-arm64
+          path: ${{ env.LAMBDA_ZIP_PATH }}
+          if-no-files-found: error
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6.1.0
+        with:
+          role-to-assume: ${{ secrets.AWS_GITHUB_ACTIONS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy Lambda code
+        run: |
+          aws lambda update-function-code \
+            --function-name "$LAMBDA_FUNCTION_NAME" \
+            --zip-file "fileb://$LAMBDA_ZIP_PATH"
+
+          aws lambda wait function-updated \
+            --function-name "$LAMBDA_FUNCTION_NAME"
+
+      - name: Show Lambda deployment summary
+        run: |
+          aws lambda get-function-configuration \
+            --function-name "$LAMBDA_FUNCTION_NAME" \
+            --query '{FunctionName:FunctionName,Runtime:Runtime,Architectures:Architectures,LastModified:LastModified,State:State}' \
+            --output table

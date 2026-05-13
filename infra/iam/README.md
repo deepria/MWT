@@ -1,9 +1,9 @@
 # IAM Setup
 
-## GitHub Actions OIDC For public-api Lambda Deploy
+## GitHub Actions OIDC For Lambda Deploys
 
-The Lambda deployment workflow uses GitHub Actions OIDC instead of long-lived
-AWS access keys.
+The Lambda deployment workflows use GitHub Actions OIDC instead of long-lived
+AWS access keys. Public and admin Lambda deploys are intentionally separate.
 
 AWS IAM prerequisites:
 
@@ -17,13 +17,17 @@ GitHub repository settings:
 
 - Secret: `AWS_GITHUB_ACTIONS_ROLE_ARN`
   - Value: IAM role ARN created for this workflow.
-- Optional variable: `PUBLIC_API_LAMBDA_FUNCTION_NAME`
-  - Default used by workflow: `mwt-public-api`
+- Optional variables:
+  - `PUBLIC_API_LAMBDA_FUNCTION_NAME`
+    - Default used by workflow: `mwt-public-api`
+  - `ADMIN_API_LAMBDA_FUNCTION_NAME`
+    - Default used by workflow: `mwt-admin-api`
 
 Attach this permissions policy to the role:
 
 ```text
 infra/iam/github-actions-public-api-deploy-policy.json
+infra/iam/github-actions-admin-api-deploy-policy.json
 ```
 
 Trust policy template:
@@ -62,13 +66,15 @@ For manual first setup in the AWS console:
 5. IAM > Roles > Create role > Web identity.
 6. Select the GitHub OIDC provider.
 7. Set the trust policy to the template above, with `OWNER/REPO` replaced.
-8. Attach `github-actions-public-api-deploy-policy.json`.
+8. Attach `github-actions-public-api-deploy-policy.json` and
+   `github-actions-admin-api-deploy-policy.json`.
 9. Copy the role ARN into GitHub secret `AWS_GITHUB_ACTIONS_ROLE_ARN`.
 
 The workflow file is:
 
 ```text
 .github/workflows/deploy-public-api-lambda.yml
+.github/workflows/deploy-admin-api-lambda.yml
 ```
 
 The workflow is intentionally manual-only for the first repository push. After

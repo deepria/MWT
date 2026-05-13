@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "20 Execution/Phase 3/Phase 3 - 문제 자산과 Manifest 상세 설계.md",
+                "file": "90 References/mwt-sensitive-config-inventory.md",
                 "mode": "preview",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Phase 3 - 문제 자산과 Manifest 상세 설계"
+              "title": "mwt-sensitive-config-inventory"
             }
           }
         ]
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "20 Execution/Phase 3/Phase 3 - 문제 자산과 Manifest 상세 설계.md",
+                "file": "90 References/mwt-sensitive-config-inventory.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Phase 3 - 문제 자산과 Manifest 상세 설계 의 백링크"
+              "title": "mwt-sensitive-config-inventory 의 백링크"
             }
           },
           {
@@ -113,12 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "20 Execution/Phase 3/Phase 3 - 문제 자산과 Manifest 상세 설계.md",
+                "file": "90 References/mwt-sensitive-config-inventory.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Phase 3 - 문제 자산과 Manifest 상세 설계 의 나가는 링크"
+              "title": "mwt-sensitive-config-inventory 의 나가는 링크"
             }
           },
           {
@@ -156,13 +156,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "20 Execution/Phase 3/Phase 3 - 문제 자산과 Manifest 상세 설계.md",
+                "file": "90 References/mwt-sensitive-config-inventory.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Phase 3 - 문제 자산과 Manifest 상세 설계 의 개요"
+              "title": "mwt-sensitive-config-inventory 의 개요"
             }
           }
         ]
@@ -185,8 +185,8 @@
   },
   "active": "e5bb112b5258a6f5",
   "lastOpenFiles": [
-    "90 References/mwt-sensitive-config-inventory.md",
     "20 Execution/Phase 3/Phase 3 - 문제 자산과 Manifest 상세 설계.md",
+    "90 References/mwt-sensitive-config-inventory.md",
     "20 Execution/Phase 2/Phase 2 - 프론트 CI-CD 세팅 히스토리.md",
     "20 Execution/Phase 2/Phase 2 - API 및 데이터 모델 상세 설계.md",
     "20 Execution/Phase 1/Phase 1 - 프론트 기본 뼈대 상세 설계.md",

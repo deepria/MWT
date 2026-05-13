@@ -40,12 +40,21 @@ bash scripts/package-public-api.sh
 
 Upload `target/lambda/public-api-arm64.zip` to the Lambda function.
 
+Build and package `admin-api`:
+
+```sh
+bash scripts/package-admin-api.sh
+```
+
+Upload `target/lambda/admin-api-arm64.zip` to the admin Lambda function.
+
 Lambda settings:
 
 - Runtime: `provided.al2023`
 - Architecture: `arm64`
 - Handler: `bootstrap`
 - Environment variable: `MWT_CORE_TABLE_NAME=mwt-core-table-prod`
+- Admin API also requires `MWT_ASSETS_BUCKET_NAME`.
 
 ## Phase 2 API Scope
 
@@ -72,10 +81,11 @@ GitHub Actions workflow:
 
 ```text
 .github/workflows/deploy-public-api-lambda.yml
+.github/workflows/deploy-admin-api-lambda.yml
 ```
 
-The workflow builds the ARM64 package, uploads it as an artifact, then deploys
-it to the `mwt-public-api` Lambda with `aws lambda update-function-code`.
+Each workflow builds its own ARM64 package, uploads it as an artifact, then
+deploys only its matching Lambda with `aws lambda update-function-code`.
 
 Required GitHub secret:
 
@@ -87,6 +97,7 @@ Optional GitHub variable:
 
 ```text
 PUBLIC_API_LAMBDA_FUNCTION_NAME=mwt-public-api
+ADMIN_API_LAMBDA_FUNCTION_NAME=mwt-admin-api
 ```
 
 IAM setup notes live in:
