@@ -25,3 +25,6 @@ target/
 
 # Lambda build artifacts are reproducible from source.
 *.zip
+
+#
+docs/90 References/mwt-sensitive-config-inventory.md
