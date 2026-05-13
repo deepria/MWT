@@ -401,6 +401,68 @@ pre {
   max-width: 860px;
 }
 
+.section-heading,
+.case-editor-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.section-heading h2 {
+  margin: 0;
+  color: #162822;
+  font-size: 22px;
+}
+
+.section-heading span,
+.case-editor-heading span {
+  color: #65736e;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.case-editor {
+  display: grid;
+  gap: 12px;
+}
+
+.case-editor-heading strong {
+  color: #34443e;
+  font-size: 14px;
+}
+
+.case-editor-heading .weight-error {
+  color: #a63b50;
+}
+
+.case-row {
+  display: grid;
+  grid-template-columns:
+    minmax(72px, 0.45fr) minmax(0, 1.3fr) minmax(0, 1.3fr)
+    minmax(88px, 0.55fr) auto;
+  gap: 10px;
+  align-items: end;
+  padding: 12px;
+  border: 1px solid #dce5df;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.compact-button,
+.add-case-button {
+  min-height: 44px;
+}
+
+.compact-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.add-case-button {
+  justify-self: start;
+}
+
 .form-row {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -473,8 +535,15 @@ pre {
   .problem-row,
   .sample-grid,
   .result-summary,
-  .form-row {
+  .form-row,
+  .case-row {
     grid-template-columns: 1fr;
+  }
+
+  .section-heading,
+  .case-editor-heading {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .page-shell {

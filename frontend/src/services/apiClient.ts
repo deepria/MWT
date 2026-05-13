@@ -25,6 +25,50 @@ interface CreateProblemRequest {
   memory_limit_mb: number
 }
 
+type AssetType =
+  | 'statement'
+  | 'sample_input'
+  | 'sample_output'
+  | 'bundle'
+  | 'checker'
+
+interface PresignAssetRequest {
+  asset_type: AssetType
+  content_type?: string
+  sample_id?: string
+}
+
+interface PresignedUploadResponse {
+  bucket: string
+  key: string
+  upload_url: string
+  expires_in_seconds: number
+}
+
+export interface ManifestCaseRequest {
+  id: number
+  input_path: string
+  output_path: string
+  weight: number
+}
+
+interface FinalizeBundleRequest {
+  bundle_key: string
+  bundle_hash: string
+  bundle_size_bytes: number
+  cases: ManifestCaseRequest[]
+  checker_key?: string
+  checker_hash?: string
+}
+
+interface FinalizeBundleResponse {
+  problem_id: string
+  problem_version: number
+  manifest_version: number
+  bundle_key: string
+  bundle_hash: string
+}
+
 interface ApiStatement {
   problem_id: string
   format: 'markdown'
@@ -88,8 +132,7 @@ async function request<T>(
   const response = await window.fetch(`${requireApiBaseUrl()}${path}`, {
     method: options.method ?? 'GET',
     headers,
-    body:
-      options.body === undefined ? undefined : JSON.stringify(options.body),
+    body: options.body === undefined ? undefined : JSON.stringify(options.body),
   })
 
   if (!response.ok) {
@@ -214,4 +257,50 @@ export async function createAdminProblem(problem: CreateProblemRequest) {
       body: problem,
     }),
   )
+}
+
+export async function presignAdminProblemAsset(
+  problemId: string,
+  payload: PresignAssetRequest,
+) {
+  return request<PresignedUploadResponse>(
+    `/admin/problems/${encodeURIComponent(problemId)}/assets/presign`,
+    {
+      auth: true,
+      method: 'POST',
+      body: payload,
+    },
+  )
+}
+
+export async function finalizeAdminProblemBundle(
+  problemId: string,
+  payload: FinalizeBundleRequest,
+) {
+  return request<FinalizeBundleResponse>(
+    `/admin/problems/${encodeURIComponent(problemId)}/bundle/finalize`,
+    {
+      auth: true,
+      method: 'POST',
+      body: payload,
+    },
+  )
+}
+
+export async function uploadPresignedObject(
+  uploadUrl: string,
+  file: File,
+  contentType: string,
+) {
+  const response = await window.fetch(uploadUrl, {
+    method: 'PUT',
+    headers: {
+      'content-type': contentType,
+    },
+    body: file,
+  })
+
+  if (!response.ok) {
+    throw new Error(await responseErrorMessage(response))
+  }
 }
