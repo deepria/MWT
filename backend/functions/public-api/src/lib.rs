@@ -157,13 +157,7 @@ fn auth_context(request: &Request) -> Option<AuthContext> {
         .and_then(|claims| claims.get("cognito:groups"))
         .cloned()
         .or_else(|| header(request, "x-mwt-groups"))
-        .map(|value| {
-            value
-                .split(',')
-                .filter(|group| !group.is_empty())
-                .map(str::to_string)
-                .collect()
-        })
+        .map(|value| parse_groups(&value))
         .unwrap_or_default();
 
     Some(AuthContext {
@@ -179,6 +173,29 @@ fn header(request: &Request, name: &str) -> Option<String> {
         .get(name)
         .and_then(|value| value.to_str().ok())
         .map(str::to_string)
+}
+
+fn parse_groups(value: &str) -> Vec<String> {
+    let trimmed = value.trim();
+
+    if trimmed.is_empty() {
+        return Vec::new();
+    }
+
+    if let Ok(groups) = serde_json::from_str::<Vec<String>>(trimmed) {
+        return groups
+            .into_iter()
+            .map(|group| group.trim().to_string())
+            .filter(|group| !group.is_empty())
+            .collect();
+    }
+
+    trimmed
+        .trim_matches(['[', ']'])
+        .split(',')
+        .map(|group| group.trim().trim_matches('"').to_string())
+        .filter(|group| !group.is_empty())
+        .collect()
 }
 
 fn not_found(message: &str) -> Result<Response<Body>, Error> {
@@ -306,6 +323,20 @@ mod tests {
 
         assert_eq!(response.status(), StatusCode::OK);
         assert!(body_text(response).contains("sub-20260429-001"));
+    }
+
+    #[test]
+    fn parses_group_claim_variants() {
+        assert_eq!(parse_groups("admin"), vec!["admin"]);
+        assert_eq!(
+            parse_groups("admin,participant"),
+            vec!["admin", "participant"]
+        );
+        assert_eq!(parse_groups(r#"["admin"]"#), vec!["admin"]);
+        assert_eq!(
+            parse_groups(r#"["admin","participant"]"#),
+            vec!["admin", "participant"]
+        );
     }
 
     fn body_text(response: Response<Body>) -> String {
