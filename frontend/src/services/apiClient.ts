@@ -84,6 +84,10 @@ interface FinalizeBundleResponse {
   bundle_hash: string
 }
 
+interface UpdateProblemVisibilityRequest {
+  visibility: 'draft' | 'public' | 'archived'
+}
+
 export interface AdminProblem {
   id: string
   title: string
@@ -361,6 +365,22 @@ export async function finalizeAdminProblemBundle(
       method: 'POST',
       body: payload,
     },
+  )
+}
+
+export async function updateAdminProblemVisibility(
+  problemId: string,
+  payload: UpdateProblemVisibilityRequest,
+) {
+  return toAdminProblem(
+    await request<ApiProblem>(
+      `/admin/problems/${encodeURIComponent(problemId)}/visibility`,
+      {
+        auth: true,
+        method: 'PATCH',
+        body: payload,
+      },
+    ),
   )
 }
 

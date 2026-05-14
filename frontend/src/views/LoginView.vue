@@ -19,7 +19,7 @@ async function submit() {
 
   try {
     const redirectPath =
-      (route.query.redirect as string | undefined) ?? '/problems'
+      (route.query.redirect as string | undefined) ?? '/'
 
     if (isHostedUi) {
       await auth.login('', '', redirectPath)
@@ -43,11 +43,8 @@ async function submit() {
   <section class="login-layout">
     <div class="login-copy">
       <p class="eyebrow">MWT Online Judge</p>
-      <h1>문제 풀이와 채점 흐름을 먼저 굴립니다.</h1>
-      <p>
-        Phase 1에서는 Cognito 연결 전환을 염두에 둔 mock 세션으로 보호 라우트와
-        문제 UI를 검증합니다.
-      </p>
+      <h1>맞왜틀(진짜모름)</h1>
+      <p>맞는데 왜 틀림..?</p>
     </div>
 
     <form class="form-panel" @submit.prevent="submit">

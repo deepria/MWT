@@ -6,7 +6,7 @@ use aws_sdk_dynamodb::types::AttributeValue;
 use aws_sdk_dynamodb::Client as DynamoDbClient;
 use aws_sdk_s3::presigning::PresigningConfig;
 use aws_sdk_s3::Client as S3Client;
-use mwt_domain::problem::{ProblemManifest, ProblemMeta};
+use mwt_domain::problem::{ProblemManifest, ProblemMeta, ProblemVisibility};
 use mwt_domain::submission::{SubmissionDetail, SubmissionMeta};
 use serde_json::{Map, Number, Value};
 
@@ -227,6 +227,30 @@ impl ProblemAssetRepository for AwsRepository {
             .table_name(&self.table_name)
             .set_item(Some(item))
             .condition_expression("attribute_not_exists(pk)")
+            .send()
+            .await
+            .map_err(storage_error)?;
+
+        Ok(problem)
+    }
+
+    async fn update_problem_visibility(
+        &self,
+        mut problem: ProblemMeta,
+        visibility: ProblemVisibility,
+    ) -> RepositoryResult<ProblemMeta> {
+        problem.visibility = visibility;
+
+        let item = item_to_attribute_map(
+            problem_meta_to_item(&problem)
+                .map_err(|error| RepositoryError::Storage(error.to_string()))?,
+        )?;
+
+        self.dynamodb
+            .put_item()
+            .table_name(&self.table_name)
+            .set_item(Some(item))
+            .condition_expression("attribute_exists(pk)")
             .send()
             .await
             .map_err(storage_error)?;

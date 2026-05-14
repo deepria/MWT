@@ -59,6 +59,7 @@ textarea {
 .session-area,
 .inline-meta,
 .row-meta,
+.action-row,
 .tag-list {
   display: flex;
   align-items: center;
@@ -327,7 +328,8 @@ textarea {
 
 .tag-list,
 .inline-meta,
-.row-meta {
+.row-meta,
+.action-row {
   gap: 8px;
   flex-wrap: wrap;
 }
@@ -370,15 +372,15 @@ textarea {
 }
 
 .difficulty-badge[data-level='easy'] {
-  background: #2f7f59;
+  background: #bdffcf;
 }
 
 .difficulty-badge[data-level='medium'] {
-  background: #b8642f;
+  background: #ffaa72;
 }
 
 .difficulty-badge[data-level='hard'] {
-  background: #a63b50;
+  background: #ff4c6d;
 }
 
 .detail-grid {
@@ -477,6 +479,11 @@ pre {
 .admin-summary p {
   margin: 0;
   color: #65736e;
+}
+
+.action-row span {
+  color: #52605b;
+  font-size: 14px;
 }
 
 .compact-list {

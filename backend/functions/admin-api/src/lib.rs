@@ -63,6 +63,11 @@ struct CreateProblemRequest {
     visibility: Option<ProblemVisibility>,
 }
 
+#[derive(Debug, Deserialize)]
+struct UpdateVisibilityRequest {
+    visibility: ProblemVisibility,
+}
+
 #[derive(Debug, Serialize)]
 struct ErrorBody {
     message: String,
@@ -103,6 +108,12 @@ where
             }
             get_admin_problem(&repository, problem_id).await
         }
+        ("PATCH", ["admin", "problems", problem_id, "visibility"]) => {
+            if let Some(response) = require_admin(&request) {
+                return response;
+            }
+            update_problem_visibility(&request, &repository, problem_id).await
+        }
         ("POST", ["admin", "problems", problem_id, "assets", "presign"]) => {
             if let Some(response) = require_admin(&request) {
                 return response;
@@ -122,6 +133,43 @@ where
             },
         ),
     }
+}
+
+async fn update_problem_visibility<R>(
+    request: &Request,
+    repository: &R,
+    problem_id: &str,
+) -> Result<Response<Body>, Error>
+where
+    R: ProblemRepository + ProblemAssetRepository,
+{
+    if !is_safe_segment(problem_id) {
+        return bad_request("invalid problem id");
+    }
+
+    let problem = match repository.get_problem(problem_id).await {
+        Ok(problem) => problem,
+        Err(RepositoryError::NotFound(_)) => return not_found("problem not found"),
+        Err(error) => return Err(error.into()),
+    };
+    let body = match body_text(request) {
+        Ok(body) => body,
+        Err(response) => return Ok(response),
+    };
+    let payload = match serde_json::from_str::<UpdateVisibilityRequest>(&body) {
+        Ok(payload) => payload,
+        Err(_) => return bad_request("invalid JSON body"),
+    };
+
+    if let Err(message) = validate_visibility_transition(&problem, &payload.visibility) {
+        return bad_request(message);
+    }
+
+    let updated = repository
+        .update_problem_visibility(problem, payload.visibility)
+        .await?;
+
+    json_response(StatusCode::OK, &updated)
 }
 
 async fn list_admin_problems<R>(repository: &R) -> Result<Response<Body>, Error>
@@ -441,6 +489,38 @@ fn validate_create_problem(payload: &CreateProblemRequest) -> Result<(), &'stati
         .any(|tag| !tag.trim().is_empty() && !is_safe_tag(tag.trim()))
     {
         return Err("tags must contain only letters, numbers, dash, underscore, or plus");
+    }
+
+    Ok(())
+}
+
+fn validate_visibility_transition(
+    problem: &ProblemMeta,
+    visibility: &ProblemVisibility,
+) -> Result<(), &'static str> {
+    if visibility != &ProblemVisibility::Public {
+        return Ok(());
+    }
+
+    if problem.statement_markdown.trim().is_empty() {
+        return Err("statement_markdown is required before publishing");
+    }
+    if problem.sample_cases.is_empty()
+        || problem
+            .sample_cases
+            .iter()
+            .any(|sample| sample.input.trim().is_empty() || sample.output.trim().is_empty())
+    {
+        return Err("sample_cases are required before publishing");
+    }
+    if problem.allowed_languages.is_empty() {
+        return Err("allowed_languages are required before publishing");
+    }
+    if problem.manifest_version.is_none()
+        || problem.bundle_key.is_none()
+        || problem.bundle_hash.is_none()
+    {
+        return Err("finalized bundle is required before publishing");
     }
 
     Ok(())
@@ -949,6 +1029,27 @@ mod tests {
         .unwrap();
 
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn publishes_finalized_problem_for_admin() {
+        let request = request(
+            Method::PATCH,
+            "/admin/problems/sum-path/visibility",
+            &[("x-mwt-user-id", "admin-user"), ("x-mwt-groups", "admin")],
+            r#"{"visibility":"public"}"#,
+        );
+
+        let response = handle_request(
+            request,
+            MemoryRepository::default(),
+            "mwt-assets-test".to_string(),
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        assert!(body_text_from_response(response).contains(r#""visibility":"public""#));
     }
 
     #[test]

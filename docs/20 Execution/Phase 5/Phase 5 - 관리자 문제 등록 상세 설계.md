@@ -70,11 +70,12 @@ Phase 5에서는 statement/sample 업로드, 검증 루틴, 공개 전환 정책
   MVP의 즉시 조회 가능한 설명 본문은 DynamoDB 문제 메타에 저장한다.
 - S3 sample 업로드는 후속 파일 기반 sample 교체 UI 범위로 남기고,
   MVP의 즉시 조회 가능한 예제 입출력은 DynamoDB 문제 메타에 저장한다.
+- finalized bundle, 문제 설명, 예제, 제출 가능 언어가 모두 준비된 문제를 `public`으로 전환하는 관리자 API/UI를 추가했다.
 
 남은 개발기 작업:
 
 - 문제 설명/제출 언어/예제 보강분을 `admin-api`, `public-api`, frontend에 배포
-- 실제 화면에서 신규 문제 등록, 목록/상세 조회, 참가자 상세 조회를 리허설
+- 실제 화면에서 신규 문제 등록, 공개 전환, 목록/상세 조회, 참가자 상세 조회를 리허설
 - 실제 화면에서 bundle finalize 리허설
 
 ### 관리자 권한
@@ -89,20 +90,20 @@ Phase 5에서는 statement/sample 업로드, 검증 루틴, 공개 전환 정책
 2. `/admin/problems`에서 draft 포함 관리자 문제 목록 확인
 3. `/admin/problems/{problem_id}` 상세 화면에서 업로드 시점에 presigned URL 발급
 4. bundle 업로드 후 manifest cases와 hash/size로 finalize
-5. sample 업로드와 공개 가능 여부 판정
-6. S3 statement 업로드 UI는 후속 고급 편집/자산 업로드 흐름에서 제공
+5. 공개 가능 조건을 만족하면 `/admin/problems/{problem_id}/visibility`로 `public` 전환
+6. sample 업로드와 공개 가능 여부 판정 고도화
+7. S3 statement 업로드 UI는 후속 고급 편집/자산 업로드 흐름에서 제공
 
 현재 구현된 관리자 화면:
 
 - 관리자 문제 목록: 제목, 난이도, 제한, 제출 가능 언어, visibility, manifest/bundle 상태 표시
 - 새 문제 등록: `problem_id`, 제목, 난이도, 시간 제한, 메모리 제한, 태그, 문제 설명, 제출 가능 언어, 예제 입력/출력 입력
-- 관리자 상세: 문제 설명, 제출 가능 언어, 예제 입출력, statement 위치, bundle/hash 상태 표시, bundle ZIP 선택, case path/weight 입력, 업로드 후 finalize
+- 관리자 상세: 문제 설명, 제출 가능 언어, 예제 입출력, statement 위치, bundle/hash 상태 표시, bundle ZIP 선택, case path/weight 입력, 업로드 후 finalize, 공개 전환
 
 아직 미구현:
 
 - S3 sample 업로드/교체 UI
 - S3 statement 업로드/교체 UI
-- 문제 공개 전환 UI와 공개 가능성 검증
 - checker 업로드 UI
 - rejudge 요청 UI
 

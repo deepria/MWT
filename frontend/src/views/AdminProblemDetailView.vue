@@ -9,6 +9,7 @@ import {
   getAdminProblem,
   type ManifestCaseRequest,
   presignAdminProblemAsset,
+  updateAdminProblemVisibility,
   uploadPresignedObject,
 } from '@/services/apiClient'
 
@@ -19,8 +20,10 @@ const props = defineProps<{
 const problem = ref<AdminProblem | null>(null)
 const isLoading = ref(true)
 const isUploadingBundle = ref(false)
+const isUpdatingVisibility = ref(false)
 const errorMessage = ref('')
 const bundleErrorMessage = ref('')
+const visibilityMessage = ref('')
 const selectedBundle = ref<File | null>(null)
 const uploadedBundleKey = ref('')
 const uploadedBundleHash = ref('')
@@ -60,6 +63,18 @@ const canFinalizeBundle = computed(
         bundleCase.weight > 0,
     ) &&
     !isUploadingBundle.value,
+)
+
+const canPublish = computed(
+  () =>
+    problem.value !== null &&
+    problem.value.visibility !== 'public' &&
+    problem.value.statementMarkdown.trim().length > 0 &&
+    problem.value.sampleCases.length > 0 &&
+    problem.value.allowedLanguages.length > 0 &&
+    problem.value.manifestVersion !== null &&
+    problem.value.bundleKey !== null &&
+    !isUpdatingVisibility.value,
 )
 
 onMounted(loadProblem)
@@ -176,6 +191,25 @@ async function uploadAndFinalizeBundle() {
     isUploadingBundle.value = false
   }
 }
+
+async function publishProblem() {
+  if (!canPublish.value || !problem.value) return
+
+  isUpdatingVisibility.value = true
+  visibilityMessage.value = ''
+
+  try {
+    problem.value = await updateAdminProblemVisibility(problem.value.id, {
+      visibility: 'public',
+    })
+    visibilityMessage.value = '문제를 공개했습니다.'
+  } catch (error) {
+    visibilityMessage.value =
+      error instanceof Error ? error.message : '문제 공개에 실패했습니다.'
+  } finally {
+    isUpdatingVisibility.value = false
+  }
+}
 </script>
 
 <template>
@@ -205,6 +239,18 @@ async function uploadAndFinalizeBundle() {
           <span class="status-pill">{{ problem.visibility }}</span>
           <h2>{{ problem.title }}</h2>
           <p>{{ problem.id }}</p>
+        </div>
+
+        <div class="action-row">
+          <button
+            class="primary-button"
+            type="button"
+            :disabled="!canPublish"
+            @click="publishProblem"
+          >
+            {{ isUpdatingVisibility ? '공개 중' : '공개로 전환' }}
+          </button>
+          <span v-if="visibilityMessage">{{ visibilityMessage }}</span>
         </div>
 
         <div class="row-meta">

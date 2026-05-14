@@ -190,6 +190,16 @@ impl ProblemAssetRepository for MemoryRepository {
         Ok(problem)
     }
 
+    async fn update_problem_visibility(
+        &self,
+        mut problem: ProblemMeta,
+        visibility: ProblemVisibility,
+    ) -> RepositoryResult<ProblemMeta> {
+        problem.visibility = visibility;
+
+        Ok(problem)
+    }
+
     async fn finalize_problem_bundle(
         &self,
         mut problem: ProblemMeta,
