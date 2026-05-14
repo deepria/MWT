@@ -5,7 +5,7 @@ import AdminProblemDetailView from '@/views/AdminProblemDetailView.vue'
 import AdminProblemListView from '@/views/AdminProblemListView.vue'
 import AdminProblemNewView from '@/views/AdminProblemNewView.vue'
 import AuthCallbackView from '@/views/AuthCallbackView.vue'
-import IndexView from "@/views/IndexView.vue";
+import IndexView from '@/views/IndexView.vue'
 import LoginView from '@/views/LoginView.vue'
 import ProblemDetailView from '@/views/ProblemDetailView.vue'
 import ProblemListView from '@/views/ProblemListView.vue'

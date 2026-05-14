@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use mwt_domain::problem::{ProblemManifest, ProblemMeta, ProblemVisibility};
+use mwt_domain::problem::{ProblemManifest, ProblemMeta, ProblemVisibility, SampleCase};
 use mwt_domain::submission::{SubmissionDetail, SubmissionMeta};
 use serde::Serialize;
 use thiserror::Error;
@@ -71,6 +71,13 @@ pub trait ProblemAssetRepository: Send + Sync {
         &self,
         problem: ProblemMeta,
         visibility: ProblemVisibility,
+    ) -> RepositoryResult<ProblemMeta>;
+
+    async fn update_problem_content(
+        &self,
+        problem: ProblemMeta,
+        statement_markdown: String,
+        sample_cases: Vec<SampleCase>,
     ) -> RepositoryResult<ProblemMeta>;
 
     async fn finalize_problem_bundle(

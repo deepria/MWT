@@ -9,6 +9,7 @@ import {
   getAdminProblem,
   type ManifestCaseRequest,
   presignAdminProblemAsset,
+  updateAdminProblemContent,
   updateAdminProblemVisibility,
   uploadPresignedObject,
 } from '@/services/apiClient'
@@ -19,9 +20,11 @@ const props = defineProps<{
 
 const problem = ref<AdminProblem | null>(null)
 const isLoading = ref(true)
+const isSavingContent = ref(false)
 const isUploadingBundle = ref(false)
 const isUpdatingVisibility = ref(false)
 const errorMessage = ref('')
+const contentMessage = ref('')
 const bundleErrorMessage = ref('')
 const visibilityMessage = ref('')
 const selectedBundle = ref<File | null>(null)
@@ -32,6 +35,11 @@ const finalizeResult = ref<{
   problem_version: number
   bundle_key: string
 } | null>(null)
+
+const contentForm = reactive({
+  statementMarkdown: '',
+  sampleCases: [{ input: '', output: '' }],
+})
 
 const bundleCases = reactive([
   {
@@ -65,6 +73,19 @@ const canFinalizeBundle = computed(
     !isUploadingBundle.value,
 )
 
+const canSaveContent = computed(
+  () =>
+    problem.value !== null &&
+    contentForm.statementMarkdown.trim().length > 0 &&
+    contentForm.sampleCases.length > 0 &&
+    contentForm.sampleCases.every(
+      (sampleCase) =>
+        sampleCase.input.trim().length > 0 &&
+        sampleCase.output.trim().length > 0,
+    ) &&
+    !isSavingContent.value,
+)
+
 const canPublish = computed(
   () =>
     problem.value !== null &&
@@ -85,6 +106,7 @@ async function loadProblem() {
 
   try {
     problem.value = await getAdminProblem(props.problemId)
+    syncContentForm()
   } catch (error) {
     errorMessage.value =
       error instanceof Error
@@ -92,6 +114,58 @@ async function loadProblem() {
         : '문제 정보를 불러오지 못했습니다.'
   } finally {
     isLoading.value = false
+  }
+}
+
+function syncContentForm() {
+  if (!problem.value) return
+
+  contentForm.statementMarkdown = problem.value.statementMarkdown
+  contentForm.sampleCases.splice(
+    0,
+    contentForm.sampleCases.length,
+    ...problem.value.sampleCases.map((sampleCase) => ({
+      input: sampleCase.input,
+      output: sampleCase.output,
+    })),
+  )
+
+  if (contentForm.sampleCases.length === 0) {
+    contentForm.sampleCases.push({ input: '', output: '' })
+  }
+}
+
+function addSampleCase() {
+  contentForm.sampleCases.push({ input: '', output: '' })
+}
+
+function removeSampleCase(index: number) {
+  if (contentForm.sampleCases.length <= 1) return
+
+  contentForm.sampleCases.splice(index, 1)
+}
+
+async function saveContent() {
+  if (!canSaveContent.value || !problem.value) return
+
+  isSavingContent.value = true
+  contentMessage.value = ''
+
+  try {
+    problem.value = await updateAdminProblemContent(problem.value.id, {
+      statement_markdown: contentForm.statementMarkdown.trim(),
+      sample_cases: contentForm.sampleCases.map((sampleCase) => ({
+        input: sampleCase.input.trim(),
+        output: sampleCase.output.trim(),
+      })),
+    })
+    syncContentForm()
+    contentMessage.value = '문제 설명과 예제를 저장했습니다.'
+  } catch (error) {
+    contentMessage.value =
+      error instanceof Error ? error.message : '문제 설명 저장에 실패했습니다.'
+  } finally {
+    isSavingContent.value = false
   }
 }
 
@@ -275,29 +349,12 @@ async function publishProblem() {
           <div>
             <dt>등록 설명</dt>
             <dd>
-              <pre class="statement-block inline-statement">{{
-                problem.statementMarkdown
-              }}</pre>
+              <span>{{ problem.statementMarkdown ? '등록됨' : '없음' }}</span>
             </dd>
           </div>
           <div>
             <dt>예제</dt>
-            <dd>
-              <div
-                v-for="(sampleCase, index) in problem.sampleCases"
-                :key="index"
-                class="sample-grid compact-sample-grid"
-              >
-                <div>
-                  <h3>입력 {{ index + 1 }}</h3>
-                  <pre>{{ sampleCase.input }}</pre>
-                </div>
-                <div>
-                  <h3>출력 {{ index + 1 }}</h3>
-                  <pre>{{ sampleCase.output }}</pre>
-                </div>
-              </div>
-            </dd>
+            <dd>{{ problem.sampleCases.length }}개</dd>
           </div>
           <div>
             <dt>Bundle</dt>
@@ -308,6 +365,75 @@ async function publishProblem() {
             <dd>{{ problem.bundleHash ?? '아직 없음' }}</dd>
           </div>
         </dl>
+      </section>
+
+      <section class="admin-form">
+        <div class="section-heading">
+          <h2>문제 설명과 예제</h2>
+          <span>참가자 화면에 바로 노출</span>
+        </div>
+
+        <label>
+          문제 설명
+          <textarea v-model="contentForm.statementMarkdown" rows="12" />
+        </label>
+
+        <div class="case-editor">
+          <div class="case-editor-heading">
+            <strong>예제 입출력</strong>
+            <span>{{ contentForm.sampleCases.length }}개</span>
+          </div>
+
+          <div
+            v-for="(sampleCase, index) in contentForm.sampleCases"
+            :key="index"
+            class="sample-editor-row"
+          >
+            <label>
+              예제 입력 {{ index + 1 }}
+              <textarea
+                v-model="sampleCase.input"
+                rows="5"
+                spellcheck="false"
+              />
+            </label>
+            <label>
+              예제 출력 {{ index + 1 }}
+              <textarea
+                v-model="sampleCase.output"
+                rows="5"
+                spellcheck="false"
+              />
+            </label>
+            <button
+              class="ghost-button compact-button"
+              type="button"
+              :disabled="contentForm.sampleCases.length <= 1"
+              @click="removeSampleCase(index)"
+            >
+              삭제
+            </button>
+          </div>
+
+          <button
+            class="ghost-button add-case-button"
+            type="button"
+            @click="addSampleCase"
+          >
+            예제 추가
+          </button>
+        </div>
+
+        <p v-if="contentMessage" class="form-note">{{ contentMessage }}</p>
+
+        <button
+          class="primary-button"
+          type="button"
+          :disabled="!canSaveContent"
+          @click="saveContent"
+        >
+          {{ isSavingContent ? '저장 중' : '설명과 예제 저장' }}
+        </button>
       </section>
 
       <section class="admin-form">

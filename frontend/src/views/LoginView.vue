@@ -18,8 +18,7 @@ async function submit() {
   errorMessage.value = ''
 
   try {
-    const redirectPath =
-      (route.query.redirect as string | undefined) ?? '/'
+    const redirectPath = (route.query.redirect as string | undefined) ?? '/'
 
     if (isHostedUi) {
       await auth.login('', '', redirectPath)
@@ -43,7 +42,7 @@ async function submit() {
   <section class="login-layout">
     <div class="login-copy">
       <p class="eyebrow">MWT Online Judge</p>
-      <h1>맞왜틀(진짜모름)</h1>
+      <h1>맞왜틀</h1>
       <p>맞는데 왜 틀림..?</p>
     </div>
 

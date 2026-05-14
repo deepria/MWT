@@ -41,14 +41,13 @@ textarea {
 }
 
 .topbar {
-  position: sticky;
-  top: 0;
-  z-index: 10;
   display: grid;
   grid-template-columns: minmax(160px, 1fr) auto minmax(160px, 1fr);
   align-items: center;
   gap: 24px;
-  padding: 14px clamp(20px, 5vw, 64px);
+  min-height: 63px;
+  overflow: hidden;
+  padding: 14px clamp(16px, 4vw, 64px);
   border-bottom: 1px solid #dfe6dc;
   background: rgba(246, 248, 245, 0.94);
   backdrop-filter: blur(12px);
@@ -66,8 +65,15 @@ textarea {
 }
 
 .brand {
+  min-width: 0;
   gap: 10px;
   font-weight: 800;
+  white-space: nowrap;
+}
+
+.brand span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .brand-mark {
@@ -82,15 +88,25 @@ textarea {
 
 .topnav {
   gap: 8px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  white-space: nowrap;
+}
+
+.topnav::-webkit-scrollbar {
+  display: none;
 }
 
 .topnav a,
 .ghost-button {
+  flex: 0 0 auto;
   padding: 8px 12px;
   border: 1px solid transparent;
   border-radius: 8px;
   color: #40534c;
   background: transparent;
+  white-space: nowrap;
 }
 
 .topnav a.router-link-active {
@@ -101,10 +117,13 @@ textarea {
 .session-area {
   justify-content: flex-end;
   gap: 12px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .user-label {
-  max-width: 220px;
+  min-width: 0;
+  max-width: min(220px, 100%);
   overflow: hidden;
   color: #65736e;
   font-size: 14px;
@@ -143,6 +162,10 @@ textarea {
   font-size: clamp(32px, 4vw, 56px);
   line-height: 1.05;
   letter-spacing: 0;
+}
+
+.login-copy h1 {
+  white-space: nowrap;
 }
 
 .login-copy p,
@@ -255,6 +278,13 @@ textarea {
 .form-error {
   margin: 0;
   color: #a63b50;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.form-note {
+  margin: 0;
+  color: #52605b;
   font-size: 14px;
   line-height: 1.5;
 }
@@ -634,13 +664,14 @@ pre {
 
 @media (max-width: 760px) {
   .topbar {
-    grid-template-columns: 1fr;
-    gap: 12px;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 8px;
+    min-height: 57px;
   }
 
-  .topnav,
-  .session-area {
-    justify-content: flex-start;
+  .brand span:last-child,
+  .user-label {
+    display: none;
   }
 
   .login-layout,

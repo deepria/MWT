@@ -88,6 +88,11 @@ interface UpdateProblemVisibilityRequest {
   visibility: 'draft' | 'public' | 'archived'
 }
 
+interface UpdateProblemContentRequest {
+  statement_markdown: string
+  sample_cases: SampleCase[]
+}
+
 export interface AdminProblem {
   id: string
   title: string
@@ -375,6 +380,22 @@ export async function updateAdminProblemVisibility(
   return toAdminProblem(
     await request<ApiProblem>(
       `/admin/problems/${encodeURIComponent(problemId)}/visibility`,
+      {
+        auth: true,
+        method: 'PATCH',
+        body: payload,
+      },
+    ),
+  )
+}
+
+export async function updateAdminProblemContent(
+  problemId: string,
+  payload: UpdateProblemContentRequest,
+) {
+  return toAdminProblem(
+    await request<ApiProblem>(
+      `/admin/problems/${encodeURIComponent(problemId)}/content`,
       {
         auth: true,
         method: 'PATCH',

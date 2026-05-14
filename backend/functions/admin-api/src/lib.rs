@@ -68,6 +68,12 @@ struct UpdateVisibilityRequest {
     visibility: ProblemVisibility,
 }
 
+#[derive(Debug, Deserialize)]
+struct UpdateProblemContentRequest {
+    statement_markdown: String,
+    sample_cases: Vec<SampleCase>,
+}
+
 #[derive(Debug, Serialize)]
 struct ErrorBody {
     message: String,
@@ -114,6 +120,12 @@ where
             }
             update_problem_visibility(&request, &repository, problem_id).await
         }
+        ("PATCH", ["admin", "problems", problem_id, "content"]) => {
+            if let Some(response) = require_admin(&request) {
+                return response;
+            }
+            update_problem_content(&request, &repository, problem_id).await
+        }
         ("POST", ["admin", "problems", problem_id, "assets", "presign"]) => {
             if let Some(response) = require_admin(&request) {
                 return response;
@@ -133,6 +145,47 @@ where
             },
         ),
     }
+}
+
+async fn update_problem_content<R>(
+    request: &Request,
+    repository: &R,
+    problem_id: &str,
+) -> Result<Response<Body>, Error>
+where
+    R: ProblemRepository + ProblemAssetRepository,
+{
+    if !is_safe_segment(problem_id) {
+        return bad_request("invalid problem id");
+    }
+
+    let problem = match repository.get_problem(problem_id).await {
+        Ok(problem) => problem,
+        Err(RepositoryError::NotFound(_)) => return not_found("problem not found"),
+        Err(error) => return Err(error.into()),
+    };
+    let body = match body_text(request) {
+        Ok(body) => body,
+        Err(response) => return Ok(response),
+    };
+    let payload = match serde_json::from_str::<UpdateProblemContentRequest>(&body) {
+        Ok(payload) => payload,
+        Err(_) => return bad_request("invalid JSON body"),
+    };
+
+    if let Err(message) = validate_problem_content(&payload) {
+        return bad_request(message);
+    }
+
+    let updated = repository
+        .update_problem_content(
+            problem,
+            payload.statement_markdown.trim().to_string(),
+            normalize_sample_cases(payload.sample_cases),
+        )
+        .await?;
+
+    json_response(StatusCode::OK, &updated)
 }
 
 async fn update_problem_visibility<R>(
@@ -463,9 +516,10 @@ fn validate_create_problem(payload: &CreateProblemRequest) -> Result<(), &'stati
     if payload.memory_limit_mb < 16 {
         return Err("memory_limit_mb must be at least 16");
     }
-    if payload.statement_markdown.trim().is_empty() {
-        return Err("statement_markdown is required");
-    }
+    validate_problem_content(&UpdateProblemContentRequest {
+        statement_markdown: payload.statement_markdown.clone(),
+        sample_cases: payload.sample_cases.clone(),
+    })?;
     if payload.allowed_languages.is_empty()
         || payload
             .allowed_languages
@@ -475,14 +529,6 @@ fn validate_create_problem(payload: &CreateProblemRequest) -> Result<(), &'stati
     {
         return Err("allowed_languages must contain safe language names");
     }
-    if payload.sample_cases.is_empty()
-        || payload
-            .sample_cases
-            .iter()
-            .any(|sample| sample.input.trim().is_empty() || sample.output.trim().is_empty())
-    {
-        return Err("sample_cases must contain input and output");
-    }
     if payload
         .tags
         .iter()
@@ -491,6 +537,21 @@ fn validate_create_problem(payload: &CreateProblemRequest) -> Result<(), &'stati
         return Err("tags must contain only letters, numbers, dash, underscore, or plus");
     }
 
+    Ok(())
+}
+
+fn validate_problem_content(payload: &UpdateProblemContentRequest) -> Result<(), &'static str> {
+    if payload.statement_markdown.trim().is_empty() {
+        return Err("statement_markdown is required");
+    }
+    if payload.sample_cases.is_empty()
+        || payload
+            .sample_cases
+            .iter()
+            .any(|sample| sample.input.trim().is_empty() || sample.output.trim().is_empty())
+    {
+        return Err("sample_cases must contain input and output");
+    }
     Ok(())
 }
 
@@ -820,6 +881,55 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn updates_problem_content_for_admin() {
+        let request = request(
+            Method::PATCH,
+            "/admin/problems/sum-path/content",
+            &[("x-mwt-user-id", "admin-user"), ("x-mwt-groups", "admin")],
+            r#"{
+              "statement_markdown":"Updated statement",
+              "sample_cases":[{"input":"10 20","output":"30"}]
+            }"#,
+        );
+
+        let response = handle_request(
+            request,
+            MemoryRepository::default(),
+            "mwt-assets-test".to_string(),
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = body_text_from_response(response);
+        assert!(body.contains(r#""statement_markdown":"Updated statement""#));
+        assert!(body.contains(r#""sample_cases":[{"input":"10 20","output":"30"}]"#));
+    }
+
+    #[tokio::test]
+    async fn rejects_content_update_without_sample_output() {
+        let request = request(
+            Method::PATCH,
+            "/admin/problems/sum-path/content",
+            &[("x-mwt-user-id", "admin-user"), ("x-mwt-groups", "admin")],
+            r#"{
+              "statement_markdown":"Updated statement",
+              "sample_cases":[{"input":"10 20","output":" "}]
+            }"#,
+        );
+
+        let response = handle_request(
+            request,
+            MemoryRepository::default(),
+            "mwt-assets-test".to_string(),
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
     async fn presigns_statement_upload_for_admin() {
         let request = request(
             Method::POST,
@@ -1096,6 +1206,7 @@ mod tests {
         let body = body_text_from_response(response);
         assert!(body.contains(r#""manifest_version":2"#));
         assert!(body.contains(r#""problem_version":2"#));
+        assert!(body.contains(r#""bundle_hash":"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa""#));
         assert!(body.contains("tests-v2.zip"));
     }
 

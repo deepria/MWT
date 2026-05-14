@@ -1,150 +1,155 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 
-const dino_el = ref<HTMLDivElement | null>(null);
-const cactus_el = ref<HTMLDivElement | null>(null);
+const dino_el = ref<HTMLDivElement | null>(null)
+const cactus_el = ref<HTMLDivElement | null>(null)
 
-const message = ref('PRESS SPACE TO START');
-const score = ref(0);
-const high_score = ref(0);
-const is_running = ref(false);
-const is_jumping = ref(false);
+const message = ref('PRESS SPACE TO START')
+const score = ref(0)
+const high_score = ref(0)
+const is_running = ref(false)
+const is_jumping = ref(false)
 
-const score_text = computed(() => String(score.value).padStart(5, '0'));
-const high_score_text = computed(() => String(high_score.value).padStart(5, '0'));
+const score_text = computed(() => String(score.value).padStart(5, '0'))
+const high_score_text = computed(() =>
+  String(high_score.value).padStart(5, '0'),
+)
 
-let dino_y = 0;
-let velocity_y = 0;
-let cactus_x = 720;
-let speed = 6;
-let animation_id = 0;
+let dino_y = 0
+let velocity_y = 0
+let cactus_x = 720
+let speed = 6
+let animation_id = 0
 
-const gravity = 0.8;
-const jump_power = 15;
-const ground_y = 0;
+const gravity = 0.8
+const jump_power = 15
+const ground_y = 0
 
 function start_game() {
   if (is_running.value) {
-    jump();
-    return;
+    jump()
+    return
   }
 
-  is_running.value = true;
-  is_jumping.value = false;
-  dino_y = 0;
-  velocity_y = 0;
-  cactus_x = 720;
-  score.value = 0;
-  speed = 6;
-  message.value = '';
+  is_running.value = true
+  is_jumping.value = false
+  dino_y = 0
+  velocity_y = 0
+  cactus_x = 720
+  score.value = 0
+  speed = 6
+  message.value = ''
 
-  cancelAnimationFrame(animation_id);
-  game_loop();
+  cancelAnimationFrame(animation_id)
+  game_loop()
 }
 
 function jump() {
-  if (!is_running.value || is_jumping.value) return;
+  if (!is_running.value || is_jumping.value) return
 
-  is_jumping.value = true;
-  velocity_y = jump_power;
+  is_jumping.value = true
+  velocity_y = jump_power
 }
 
 function game_loop() {
-  update_dino();
-  update_cactus();
-  update_score();
+  update_dino()
+  update_cactus()
+  update_score()
 
   if (is_collision()) {
-    end_game();
-    return;
+    end_game()
+    return
   }
 
-  animation_id = requestAnimationFrame(game_loop);
+  animation_id = requestAnimationFrame(game_loop)
 }
 
 function update_dino() {
-  if (!dino_el.value) return;
+  if (!dino_el.value) return
 
   if (is_jumping.value) {
-    dino_y += velocity_y;
-    velocity_y -= gravity;
+    dino_y += velocity_y
+    velocity_y -= gravity
 
     if (dino_y <= ground_y) {
-      dino_y = ground_y;
-      velocity_y = 0;
-      is_jumping.value = false;
+      dino_y = ground_y
+      velocity_y = 0
+      is_jumping.value = false
     }
   }
 
-  dino_el.value.style.bottom = `${47 + dino_y}px`;
+  dino_el.value.style.bottom = `${47 + dino_y}px`
 }
 
 function update_cactus() {
-  if (!cactus_el.value) return;
+  if (!cactus_el.value) return
 
-  cactus_x -= speed;
+  cactus_x -= speed
 
   if (cactus_x < -60) {
-    cactus_x = 760 + Math.random() * 240;
-    speed += 0.25;
+    cactus_x = 760 + Math.random() * 240
+    speed += 0.25
   }
 
-  cactus_el.value.style.left = `${cactus_x}px`;
+  cactus_el.value.style.left = `${cactus_x}px`
 }
 
 function update_score() {
-  score.value = Math.floor(score.value + 1);
+  score.value = Math.floor(score.value + 1)
 }
 
 function is_collision() {
-  if (!dino_el.value || !cactus_el.value) return false;
+  if (!dino_el.value || !cactus_el.value) return false
 
-  const dino_rect = dino_el.value.getBoundingClientRect();
-  const cactus_rect = cactus_el.value.getBoundingClientRect();
-  const padding = 8;
+  const dino_rect = dino_el.value.getBoundingClientRect()
+  const cactus_rect = cactus_el.value.getBoundingClientRect()
+  const padding = 8
 
   return !(
-      dino_rect.right - padding < cactus_rect.left + padding ||
-      dino_rect.left + padding > cactus_rect.right - padding ||
-      dino_rect.bottom - padding < cactus_rect.top + padding ||
-      dino_rect.top + padding > cactus_rect.bottom - padding
-  );
+    dino_rect.right - padding < cactus_rect.left + padding ||
+    dino_rect.left + padding > cactus_rect.right - padding ||
+    dino_rect.bottom - padding < cactus_rect.top + padding ||
+    dino_rect.top + padding > cactus_rect.bottom - padding
+  )
 }
 
 function end_game() {
-  is_running.value = false;
-  high_score.value = Math.max(high_score.value, score.value);
-  message.value = 'GAME OVER';
-  cancelAnimationFrame(animation_id);
+  is_running.value = false
+  high_score.value = Math.max(high_score.value, score.value)
+  message.value = 'GAME OVER'
+  cancelAnimationFrame(animation_id)
 }
 
 function handle_keydown(event: KeyboardEvent) {
   if (event.code === 'Space' || event.code === 'ArrowUp') {
-    event.preventDefault();
-    is_running.value ? jump() : start_game();
+    event.preventDefault()
+    if (is_running.value) {
+      jump()
+    } else {
+      start_game()
+    }
   }
 }
 
 onMounted(() => {
-  document.addEventListener('keydown', handle_keydown);
-});
+  document.addEventListener('keydown', handle_keydown)
+})
 
 onUnmounted(() => {
-  document.removeEventListener('keydown', handle_keydown);
-  cancelAnimationFrame(animation_id);
-});
+  document.removeEventListener('keydown', handle_keydown)
+  cancelAnimationFrame(animation_id)
+})
 </script>
 
 <template>
-  <section class="">
-    <div class="">
+  <section class="content-stack index-view">
+    <div class="page-heading">
       <p class="eyebrow">MWT Online Judge</p>
       <h1>환영합니다.</h1>
       <p>문제를 풀어볼까요?</p>
     </div>
-  </section>
-  <section class="">
-    <div class="game" id="game">
+
+    <div id="game" class="game">
       <div class="score-board">
         <span>HI {{ high_score_text }}</span>
         <span>{{ score_text }}</span>
@@ -161,18 +166,12 @@ onUnmounted(() => {
   </section>
 </template>
 
-<style>
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  height: 100vh;
+<style scoped>
+.index-view {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-family: Arial, sans-serif;
   color: #333;
 }
 
@@ -264,7 +263,7 @@ body {
 }
 
 .dino.running::before {
-  content: "";
+  content: '';
   position: absolute;
   left: 12px;
   bottom: -8px;
@@ -275,7 +274,7 @@ body {
 }
 
 .dino.running::after {
-  content: "";
+  content: '';
   position: absolute;
   left: 28px;
   bottom: -8px;
@@ -317,7 +316,7 @@ body {
 
 .cactus::before,
 .cactus::after {
-  content: "";
+  content: '';
   position: absolute;
   width: 10px;
   height: 26px;

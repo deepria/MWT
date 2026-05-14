@@ -200,6 +200,18 @@ impl ProblemAssetRepository for MemoryRepository {
         Ok(problem)
     }
 
+    async fn update_problem_content(
+        &self,
+        mut problem: ProblemMeta,
+        statement_markdown: String,
+        sample_cases: Vec<mwt_domain::problem::SampleCase>,
+    ) -> RepositoryResult<ProblemMeta> {
+        problem.statement_markdown = statement_markdown;
+        problem.sample_cases = sample_cases;
+
+        Ok(problem)
+    }
+
     async fn finalize_problem_bundle(
         &self,
         mut problem: ProblemMeta,
