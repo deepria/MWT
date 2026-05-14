@@ -38,6 +38,7 @@ const canSubmit = computed(
     ) &&
     form.timeLimitMs >= 100 &&
     form.memoryLimitMb >= 16 &&
+    !createdProblemId.value &&
     !isSubmitting.value,
 )
 

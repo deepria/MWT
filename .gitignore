@@ -25,6 +25,7 @@ target/
 
 # Lambda build artifacts are reproducible from source.
 *.zip
+!frontend/public/samples/hidden-tests-sample.zip
 
 #
 docs/90 References/mwt-sensitive-config-inventory.md

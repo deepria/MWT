@@ -442,6 +442,24 @@ async function publishProblem() {
           <span>업로드 시점에 새 URL 발급</span>
         </div>
 
+        <div class="guide-panel">
+          <p>
+            ZIP 안에는 채점용 hidden test 입력/정답 출력 파일을 함께 넣습니다.
+            manifest cases의 경로는 내 컴퓨터 경로가 아니라 ZIP 내부 경로입니다.
+          </p>
+          <ul>
+            <li>
+              권장 구조: <code>tests/001.in</code>, <code>tests/001.out</code>
+            </li>
+            <li><code>input_path</code>: ZIP 내부 입력 파일 경로</li>
+            <li><code>output_path</code>: ZIP 내부 정답 출력 파일 경로</li>
+            <li><code>weight</code>: 케이스 점수 비중, 합계는 100</li>
+          </ul>
+          <a href="/samples/hidden-tests-sample.zip" download>
+            샘플 테스트 번들 ZIP 다운로드
+          </a>
+        </div>
+
         <label>
           번들 ZIP
           <input
