@@ -428,6 +428,10 @@ mod tests {
                 "s3://mwt-assets-prod-123456789012-ap-northeast-2-example/problems/sum-path/statement.md"
                     .to_string(),
             allowed_languages: vec!["Rust".to_string(), "Python".to_string()],
+            sample_cases: vec![mwt_domain::problem::SampleCase {
+                input: "5 2\n1 2 3 4 5\n1 3\n2 5".to_string(),
+                output: "6\n14".to_string(),
+            }],
             bundle_key: Some("problems/sum-path/bundles/tests-v1.zip".to_string()),
             bundle_hash: Some("sha256:bundle".to_string()),
             checker_key: None,

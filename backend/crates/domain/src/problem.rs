@@ -34,12 +34,20 @@ pub struct ProblemMeta {
     pub statement_location: String,
     #[serde(default = "default_allowed_languages")]
     pub allowed_languages: Vec<String>,
+    #[serde(default)]
+    pub sample_cases: Vec<SampleCase>,
     pub bundle_key: Option<String>,
     pub bundle_hash: Option<String>,
     pub checker_key: Option<String>,
     pub checker_hash: Option<String>,
     pub problem_version: u32,
     pub manifest_version: Option<u32>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SampleCase {
+    pub input: String,
+    pub output: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

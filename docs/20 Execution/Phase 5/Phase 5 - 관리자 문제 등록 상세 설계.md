@@ -60,15 +60,20 @@ Phase 5에서는 statement/sample 업로드, 검증 루틴, 공개 전환 정책
 
 - 문제 등록 시 문제 설명 본문을 `statement_markdown`으로 함께 저장한다.
 - 문제 등록 시 `allowed_languages`로 제출 가능 언어를 제한한다.
+- 문제 등록 시 참가자 노출 예제 입출력을 `sample_cases`로 함께 저장한다.
 - 관리자 신규 등록 화면에 문제 설명 textarea와 제출 가능 언어 체크박스를 추가했다.
+- 관리자 신규 등록 화면에 예제 입력/출력 editor를 추가했다.
 - 관리자 목록/상세와 참가자 문제 상세에서 제출 가능 언어를 노출한다.
 - 참가자 제출 패널의 언어 선택지는 문제별 `allowed_languages`만 사용한다.
+- 참가자 문제 상세의 예제 영역은 `sample_cases`를 사용한다.
 - S3 `statement.md` 업로드는 후속 statement 업로드 UI 범위로 남기고,
   MVP의 즉시 조회 가능한 설명 본문은 DynamoDB 문제 메타에 저장한다.
+- S3 sample 업로드는 후속 파일 기반 sample 교체 UI 범위로 남기고,
+  MVP의 즉시 조회 가능한 예제 입출력은 DynamoDB 문제 메타에 저장한다.
 
 남은 개발기 작업:
 
-- 문제 설명/제출 언어 보강분을 `admin-api`, `public-api`, frontend에 배포
+- 문제 설명/제출 언어/예제 보강분을 `admin-api`, `public-api`, frontend에 배포
 - 실제 화면에서 신규 문제 등록, 목록/상세 조회, 참가자 상세 조회를 리허설
 - 실제 화면에서 bundle finalize 리허설
 
@@ -80,7 +85,7 @@ Phase 5에서는 statement/sample 업로드, 검증 루틴, 공개 전환 정책
 
 ### 등록 플로우
 
-1. `/admin/problems/new`에서 메타, 문제 설명, 제출 가능 언어를 먼저 등록
+1. `/admin/problems/new`에서 메타, 문제 설명, 제출 가능 언어, 예제 입출력을 먼저 등록
 2. `/admin/problems`에서 draft 포함 관리자 문제 목록 확인
 3. `/admin/problems/{problem_id}` 상세 화면에서 업로드 시점에 presigned URL 발급
 4. bundle 업로드 후 manifest cases와 hash/size로 finalize
@@ -90,12 +95,12 @@ Phase 5에서는 statement/sample 업로드, 검증 루틴, 공개 전환 정책
 현재 구현된 관리자 화면:
 
 - 관리자 문제 목록: 제목, 난이도, 제한, 제출 가능 언어, visibility, manifest/bundle 상태 표시
-- 새 문제 등록: `problem_id`, 제목, 난이도, 시간 제한, 메모리 제한, 태그, 문제 설명, 제출 가능 언어 입력
-- 관리자 상세: 문제 설명, 제출 가능 언어, statement 위치, bundle/hash 상태 표시, bundle ZIP 선택, case path/weight 입력, 업로드 후 finalize
+- 새 문제 등록: `problem_id`, 제목, 난이도, 시간 제한, 메모리 제한, 태그, 문제 설명, 제출 가능 언어, 예제 입력/출력 입력
+- 관리자 상세: 문제 설명, 제출 가능 언어, 예제 입출력, statement 위치, bundle/hash 상태 표시, bundle ZIP 선택, case path/weight 입력, 업로드 후 finalize
 
 아직 미구현:
 
-- sample 업로드 UI
+- S3 sample 업로드/교체 UI
 - S3 statement 업로드/교체 UI
 - 문제 공개 전환 UI와 공개 가능성 검증
 - checker 업로드 UI

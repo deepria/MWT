@@ -3,6 +3,7 @@ import type {
   Difficulty,
   Problem,
   ProblemStatement,
+  SampleCase,
   SubmissionDetail,
   SubmissionSummary,
 } from '@/types/problem'
@@ -18,6 +19,7 @@ interface ApiProblem {
   statement_markdown?: string
   statement_location?: string
   allowed_languages?: string[]
+  sample_cases?: SampleCase[]
   bundle_key?: string | null
   bundle_hash?: string | null
   checker_key?: string | null
@@ -35,6 +37,7 @@ interface CreateProblemRequest {
   memory_limit_mb: number
   statement_markdown: string
   allowed_languages: string[]
+  sample_cases: SampleCase[]
 }
 
 type AssetType =
@@ -92,6 +95,7 @@ export interface AdminProblem {
   visibility: 'draft' | 'public' | 'archived'
   statementLocation: string
   allowedLanguages: string[]
+  sampleCases: SampleCase[]
   bundleKey: string | null
   bundleHash: string | null
   checkerKey: string | null
@@ -213,7 +217,7 @@ function toProblem(problem: ApiProblem): Problem {
     memoryLimitMb: problem.memory_limit_mb,
     allowedLanguages: problem.allowed_languages ?? ['Rust', 'Python'],
     statement: problem.statement_markdown ?? '',
-    samples: [],
+    samples: problem.sample_cases ?? [],
   }
 }
 
@@ -229,6 +233,7 @@ function toAdminProblem(problem: ApiProblem): AdminProblem {
     visibility: problem.visibility ?? 'draft',
     statementLocation: problem.statement_location ?? '',
     allowedLanguages: problem.allowed_languages ?? ['Rust', 'Python'],
+    sampleCases: problem.sample_cases ?? [],
     bundleKey: problem.bundle_key ?? null,
     bundleHash: problem.bundle_hash ?? null,
     checkerKey: problem.checker_key ?? null,

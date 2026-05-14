@@ -81,10 +81,12 @@ Phase 3에서는 남은 S3 인프라, 관리자 업로드 presign, bundle finali
 
 - 문제 등록과 관리자/참가자 조회에서 문제 설명 본문이 빠져 있던 문제를 보완했다.
 - `ProblemMeta`에 `statement_markdown`과 `allowed_languages`를 추가했다.
-- `POST /admin/problems`는 `statement_markdown`, `allowed_languages`를 필수로 받는다.
+- `ProblemMeta`에 참가자 노출 예제인 `sample_cases`를 추가했다.
+- `POST /admin/problems`는 `statement_markdown`, `allowed_languages`, `sample_cases`를 필수로 받는다.
 - `/problems/{problem_id}/statement`는 `statement_markdown`이 있으면 이를 우선 반환하고,
   기존 데이터처럼 값이 비어 있으면 S3 `statement_location`을 fallback으로 읽는다.
 - 프론트 관리자 등록 화면에 문제 설명 입력과 제출 가능 언어 체크박스를 추가했다.
+- 프론트 관리자 등록 화면에 예제 입력/출력 editor를 추가했다.
 - 참가자 문제 상세의 제출 언어 선택은 문제별 `allowed_languages`를 따른다.
 
 ### 완료로 볼 수 있는 항목
@@ -159,9 +161,10 @@ Rust 도메인 모델 기준 manifest 필드는 아래로 정렬한다.
 확정 결정:
 
 - weight 합계는 100으로 강제한다.
-- sample case는 manifest에 포함하지 않는다.
+- 참가자에게 공개되는 sample case는 manifest에 포함하지 않는다.
 - manifest는 hidden tests bundle만 관리한다.
-- 사용자 노출 sample은 `problems/{problem_id}/samples/...` prefix에 별도로 저장한다.
+- Phase 3 MVP의 사용자 노출 sample은 `ProblemMeta.sample_cases`에 저장한다.
+- S3 `problems/{problem_id}/samples/...` prefix는 후속 파일 기반 sample 업로드/교체 UI를 위한 자산 경로로 유지한다.
 
 ### S3 bucket
 
@@ -203,6 +206,8 @@ Bucket 구성:
 - statement는 문제당 현재본 1개를 유지한다.
 - Phase 3 MVP의 즉시 노출용 문제 설명은 `ProblemMeta.statement_markdown`에 저장한다.
   S3 `statement.md`는 기존 데이터 fallback과 후속 statement 업로드 UI를 위한 자산 경로로 유지한다.
+- Phase 3 MVP의 즉시 노출용 예제 입출력은 `ProblemMeta.sample_cases`에 저장한다.
+  S3 sample prefix는 후속 sample 파일 업로드 UI를 위한 자산 경로로 유지한다.
 - bundle/checker는 버전 prefix를 유지해 이전 제출의 재현성을 보장한다.
 
 ### presign API
@@ -235,6 +240,12 @@ POST /admin/problems/{problem_id}/bundle/finalize
   "memory_limit_mb": 128,
   "statement_markdown": "# Two Sum\n\n정수 배열에서 합이 target이 되는 두 원소를 찾는다.",
   "allowed_languages": ["Rust", "Python"],
+  "sample_cases": [
+    {
+      "input": "4 9\n2 7 11 15",
+      "output": "1 2"
+    }
+  ],
   "visibility": "draft"
 }
 ```
@@ -253,6 +264,8 @@ POST /admin/problems/{problem_id}/bundle/finalize
 - `allowed_languages`는 1개 이상이어야 한다.
 - 언어명은 영문/숫자/공백/`-`, `_`, `+`, `#`만 허용한다.
 - 중복 언어명은 저장 전 제거한다.
+- `sample_cases`는 1개 이상이어야 한다.
+- `sample_cases[].input`, `sample_cases[].output`은 비어 있을 수 없다.
 
 #### 자산 presign
 
@@ -372,9 +385,9 @@ POST /admin/problems/{problem_id}/bundle/finalize
 
 ## 다음 실행 순서
 
-1. 문제 설명/제출 언어 보강분을 `admin-api`, `public-api`, frontend에 배포
-2. 관리자 화면에서 신규 문제 등록 시 설명과 제출 가능 언어가 저장되는지 확인
-3. 참가자 문제 상세에서 설명 본문과 언어 제한이 노출되는지 확인
+1. 문제 설명/제출 언어/예제 보강분을 `admin-api`, `public-api`, frontend에 배포
+2. 관리자 화면에서 신규 문제 등록 시 설명, 제출 가능 언어, 예제 입출력이 저장되는지 확인
+3. 참가자 문제 상세에서 설명 본문, 예제, 언어 제한이 노출되는지 확인
 4. 관리자 화면에서 기존 `test` 문제가 목록에 보이는지 확인
 5. 상세 화면에서 bundle ZIP 업로드 후 finalize 리허설
 6. finalize 동시성 보강을 DynamoDB transaction 또는 conditional write로 후속 처리

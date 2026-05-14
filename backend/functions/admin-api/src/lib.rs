@@ -3,7 +3,7 @@ use lambda_http::RequestExt;
 use lambda_http::{Body, Error, Request, Response};
 use mwt_domain::auth::AuthContext;
 use mwt_domain::problem::{
-    Difficulty, ManifestCase, ProblemManifest, ProblemMeta, ProblemVisibility,
+    Difficulty, ManifestCase, ProblemManifest, ProblemMeta, ProblemVisibility, SampleCase,
 };
 use mwt_infra::repository::{
     AssetUploadRepository, ProblemAssetRepository, ProblemRepository, RepositoryError,
@@ -59,6 +59,7 @@ struct CreateProblemRequest {
     memory_limit_mb: u32,
     statement_markdown: String,
     allowed_languages: Vec<String>,
+    sample_cases: Vec<SampleCase>,
     visibility: Option<ProblemVisibility>,
 }
 
@@ -196,6 +197,7 @@ where
         problem_version: 1,
         manifest_version: None,
         allowed_languages: normalize_allowed_languages(payload.allowed_languages),
+        sample_cases: normalize_sample_cases(payload.sample_cases),
     };
     let created = repository.create_problem(problem).await?;
 
@@ -425,6 +427,14 @@ fn validate_create_problem(payload: &CreateProblemRequest) -> Result<(), &'stati
     {
         return Err("allowed_languages must contain safe language names");
     }
+    if payload.sample_cases.is_empty()
+        || payload
+            .sample_cases
+            .iter()
+            .any(|sample| sample.input.trim().is_empty() || sample.output.trim().is_empty())
+    {
+        return Err("sample_cases must contain input and output");
+    }
     if payload
         .tags
         .iter()
@@ -434,6 +444,16 @@ fn validate_create_problem(payload: &CreateProblemRequest) -> Result<(), &'stati
     }
 
     Ok(())
+}
+
+fn normalize_sample_cases(sample_cases: Vec<SampleCase>) -> Vec<SampleCase> {
+    sample_cases
+        .into_iter()
+        .map(|sample| SampleCase {
+            input: sample.input.trim().to_string(),
+            output: sample.output.trim().to_string(),
+        })
+        .collect()
 }
 
 fn normalize_allowed_languages(languages: Vec<String>) -> Vec<String> {
@@ -817,7 +837,8 @@ mod tests {
               "time_limit_ms":1000,
               "memory_limit_mb":128,
               "statement_markdown":"Two Sum\n\nFind two numbers.",
-              "allowed_languages":["Rust","Python"]
+              "allowed_languages":["Rust","Python"],
+              "sample_cases":[{"input":"2 3","output":"5"}]
             }"#,
         );
 
@@ -835,6 +856,7 @@ mod tests {
         assert!(body.contains("s3://mwt-assets-test/problems/two-sum/statement.md"));
         assert!(body.contains(r#""statement_markdown":"Two Sum\n\nFind two numbers.""#));
         assert!(body.contains(r#""allowed_languages":["Rust","Python"]"#));
+        assert!(body.contains(r#""sample_cases":[{"input":"2 3","output":"5"}]"#));
         assert!(body.contains(r#""visibility":"draft""#));
         assert!(body.contains(r#""problem_version":1"#));
     }
@@ -853,7 +875,8 @@ mod tests {
               "time_limit_ms":1000,
               "memory_limit_mb":128,
               "statement_markdown":"Two Sum\n\nFind two numbers.",
-              "allowed_languages":["Rust"]
+              "allowed_languages":["Rust"],
+              "sample_cases":[{"input":"2 3","output":"5"}]
             }"#,
         );
 
@@ -882,7 +905,38 @@ mod tests {
               "time_limit_ms":1000,
               "memory_limit_mb":128,
               "statement_markdown":" ",
-              "allowed_languages":["Rust"]
+              "allowed_languages":["Rust"],
+              "sample_cases":[{"input":"2 3","output":"5"}]
+            }"#,
+        );
+
+        let response = handle_request(
+            request,
+            MemoryRepository::default(),
+            "mwt-assets-test".to_string(),
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn rejects_problem_create_without_sample_cases() {
+        let request = request(
+            Method::POST,
+            "/admin/problems",
+            &[("x-mwt-user-id", "admin-user"), ("x-mwt-groups", "admin")],
+            r#"{
+              "problem_id":"two-sum",
+              "title":"Two Sum",
+              "difficulty":"easy",
+              "tags":["array"],
+              "time_limit_ms":1000,
+              "memory_limit_mb":128,
+              "statement_markdown":"Two Sum",
+              "allowed_languages":["Rust"],
+              "sample_cases":[{"input":" ","output":"5"}]
             }"#,
         );
 

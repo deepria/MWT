@@ -532,6 +532,29 @@ pre {
   background: #ffffff;
 }
 
+.sample-editor-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+  padding: 12px;
+  border: 1px solid #dce5df;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.compact-sample-grid {
+  margin-bottom: 10px;
+}
+
+.compact-sample-grid:last-child {
+  margin-bottom: 0;
+}
+
+.compact-sample-grid pre {
+  min-height: 72px;
+}
+
 .compact-button,
 .add-case-button {
   min-height: 44px;
@@ -620,6 +643,10 @@ pre {
   .result-summary,
   .form-row,
   .case-row {
+    grid-template-columns: 1fr;
+  }
+
+  .sample-editor-row {
     grid-template-columns: 1fr;
   }
 

@@ -235,6 +235,25 @@ async function uploadAndFinalizeBundle() {
             </dd>
           </div>
           <div>
+            <dt>예제</dt>
+            <dd>
+              <div
+                v-for="(sampleCase, index) in problem.sampleCases"
+                :key="index"
+                class="sample-grid compact-sample-grid"
+              >
+                <div>
+                  <h3>입력 {{ index + 1 }}</h3>
+                  <pre>{{ sampleCase.input }}</pre>
+                </div>
+                <div>
+                  <h3>출력 {{ index + 1 }}</h3>
+                  <pre>{{ sampleCase.output }}</pre>
+                </div>
+              </div>
+            </dd>
+          </div>
+          <div>
             <dt>Bundle</dt>
             <dd>{{ problem.bundleKey ?? '아직 없음' }}</dd>
           </div>

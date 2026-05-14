@@ -17,6 +17,7 @@ const form = reactive({
   tags: '',
   statementMarkdown: '',
   allowedLanguages: ['Rust'],
+  sampleCases: [{ input: '', output: '' }],
 })
 
 const isSubmitting = ref(false)
@@ -29,6 +30,12 @@ const canSubmit = computed(
     form.title.trim().length > 0 &&
     form.statementMarkdown.trim().length > 0 &&
     form.allowedLanguages.length > 0 &&
+    form.sampleCases.length > 0 &&
+    form.sampleCases.every(
+      (sampleCase) =>
+        sampleCase.input.trim().length > 0 &&
+        sampleCase.output.trim().length > 0,
+    ) &&
     form.timeLimitMs >= 100 &&
     form.memoryLimitMb >= 16 &&
     !isSubmitting.value,
@@ -58,6 +65,10 @@ async function submitProblem() {
       memory_limit_mb: form.memoryLimitMb,
       statement_markdown: form.statementMarkdown.trim(),
       allowed_languages: form.allowedLanguages,
+      sample_cases: form.sampleCases.map((sampleCase) => ({
+        input: sampleCase.input.trim(),
+        output: sampleCase.output.trim(),
+      })),
     })
 
     createdProblemId.value = problem.id
@@ -76,6 +87,16 @@ async function goToCreatedProblem() {
     name: 'admin-problem-detail',
     params: { problemId: createdProblemId.value },
   })
+}
+
+function addSampleCase() {
+  form.sampleCases.push({ input: '', output: '' })
+}
+
+function removeSampleCase(index: number) {
+  if (form.sampleCases.length <= 1) return
+
+  form.sampleCases.splice(index, 1)
 }
 </script>
 
@@ -152,6 +173,44 @@ async function goToCreatedProblem() {
           {{ language }}
         </label>
       </fieldset>
+
+      <section class="case-editor">
+        <div class="case-editor-heading">
+          <strong>예제 입출력</strong>
+          <span>{{ form.sampleCases.length }}개</span>
+        </div>
+
+        <div
+          v-for="(sampleCase, index) in form.sampleCases"
+          :key="index"
+          class="sample-editor-row"
+        >
+          <label>
+            예제 입력 {{ index + 1 }}
+            <textarea v-model="sampleCase.input" rows="5" spellcheck="false" />
+          </label>
+          <label>
+            예제 출력 {{ index + 1 }}
+            <textarea v-model="sampleCase.output" rows="5" spellcheck="false" />
+          </label>
+          <button
+            class="ghost-button compact-button"
+            type="button"
+            :disabled="form.sampleCases.length <= 1"
+            @click="removeSampleCase(index)"
+          >
+            삭제
+          </button>
+        </div>
+
+        <button
+          class="ghost-button add-case-button"
+          type="button"
+          @click="addSampleCase"
+        >
+          예제 추가
+        </button>
+      </section>
 
       <p v-if="errorMessage" class="form-error">{{ errorMessage }}</p>
 

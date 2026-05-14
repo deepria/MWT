@@ -62,6 +62,7 @@ related:
 - [x] 문제 상세 조회 가능
 - [~] 관리자 문제 등록 가능
 - [x] 문제 설명 본문 등록/조회 가능
+- [x] 예제 입력/출력 등록/조회 가능
 - [x] 문제별 제출 가능 언어 제한 등록/조회 가능
 - [ ] statement 업로드 가능
 - [~] hidden tests bundle 생성/등록 가능
@@ -369,6 +370,12 @@ related:
 
 - [~] sample 업로드 가능
 
+진행 메모:
+
+- Phase 3 MVP의 즉시 노출용 예제 입출력은 문제 등록 시 `sample_cases`로 저장한다.
+- 참가자 문제 상세의 예제 영역은 `ProblemMeta.sample_cases`를 사용한다.
+- S3 sample 업로드 UI는 Phase 5 후속 자산 업로드/교체 흐름으로 남긴다.
+
 ### P3-005. hidden tests bundle 규격 정의
 
 - [x] zip 또는 tar.zst 선택
@@ -430,10 +437,11 @@ related:
 
 2026-05-14 진행 메모:
 
-- `ProblemMeta`에 `statement_markdown`, `allowed_languages` 추가
-- `POST /admin/problems`에서 문제 설명과 제출 가능 언어를 필수 검증
-- 관리자 신규 등록 화면에 문제 설명 입력과 제출 가능 언어 체크박스 추가
+- `ProblemMeta`에 `statement_markdown`, `allowed_languages`, `sample_cases` 추가
+- `POST /admin/problems`에서 문제 설명, 제출 가능 언어, 예제 입력/출력을 필수 검증
+- 관리자 신규 등록 화면에 문제 설명 입력, 제출 가능 언어 체크박스, 예제 입력/출력 editor 추가
 - 관리자 목록/상세와 참가자 상세에서 제출 가능 언어 노출
+- 참가자 문제 상세에서 `sample_cases` 기반 예제 노출
 - 참가자 제출 언어 select는 문제별 `allowed_languages` 기준으로 제한
 
 ## Phase 4. 제출 및 채점 파이프라인
@@ -572,6 +580,7 @@ related:
 - [x] 제한 시간
 - [x] 메모리 제한
 - [x] 문제 설명
+- [x] 예제 입력/출력
 - [x] 제출 가능 언어
 - [ ] 공개 여부
 
@@ -589,6 +598,8 @@ related:
 
 - MVP 문제 설명은 `statement_markdown`으로 등록/조회한다.
 - S3 `statement.md` 업로드는 기존 데이터 fallback과 후속 고급 편집 경로로 유지한다.
+- MVP 예제 입력/출력은 `sample_cases`로 등록/조회한다.
+- S3 sample 업로드는 후속 파일 기반 sample 교체 경로로 유지한다.
 
 ### P5-006. 관리자 rejudge 경로 설계
 
