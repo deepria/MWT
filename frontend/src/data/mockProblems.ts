@@ -8,6 +8,7 @@ export const mockProblems: Problem[] = [
     tags: ['prefix-sum', 'implementation'],
     timeLimitMs: 1000,
     memoryLimitMb: 128,
+    allowedLanguages: ['Rust', 'Python'],
     statement:
       '정수 배열과 여러 구간이 주어진다. 각 질의마다 구간의 합을 빠르게 출력하는 프로그램을 작성하라.',
     samples: [
@@ -24,6 +25,7 @@ export const mockProblems: Problem[] = [
     tags: ['graph', 'bfs'],
     timeLimitMs: 2000,
     memoryLimitMb: 256,
+    allowedLanguages: ['Rust', 'Python'],
     statement:
       '벽과 빈 칸으로 이루어진 격자에서 시작점부터 도착점까지 이동 가능한 최단 거리를 구하라.',
     samples: [
@@ -40,6 +42,7 @@ export const mockProblems: Problem[] = [
     tags: ['hashing', 'validation'],
     timeLimitMs: 3000,
     memoryLimitMb: 512,
+    allowedLanguages: ['Rust'],
     statement:
       '여러 테스트 파일의 해시 목록이 주어진다. manifest의 순서와 무결성을 검증하고 누락된 파일을 찾아라.',
     samples: [

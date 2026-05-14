@@ -70,6 +70,7 @@ onMounted(async () => {
           <DifficultyBadge :value="problem.difficulty" />
           <span>{{ problem.timeLimitMs }}ms</span>
           <span>{{ problem.memoryLimitMb }}MB</span>
+          <span>{{ problem.allowedLanguages.join(', ') }}</span>
           <span>
             manifest
             {{

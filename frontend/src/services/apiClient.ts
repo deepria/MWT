@@ -15,7 +15,9 @@ interface ApiProblem {
   time_limit_ms: number
   memory_limit_mb: number
   visibility?: 'draft' | 'public' | 'archived'
+  statement_markdown?: string
   statement_location?: string
+  allowed_languages?: string[]
   bundle_key?: string | null
   bundle_hash?: string | null
   checker_key?: string | null
@@ -31,6 +33,8 @@ interface CreateProblemRequest {
   tags: string[]
   time_limit_ms: number
   memory_limit_mb: number
+  statement_markdown: string
+  allowed_languages: string[]
 }
 
 type AssetType =
@@ -84,8 +88,10 @@ export interface AdminProblem {
   tags: string[]
   timeLimitMs: number
   memoryLimitMb: number
+  statementMarkdown: string
   visibility: 'draft' | 'public' | 'archived'
   statementLocation: string
+  allowedLanguages: string[]
   bundleKey: string | null
   bundleHash: string | null
   checkerKey: string | null
@@ -205,7 +211,8 @@ function toProblem(problem: ApiProblem): Problem {
     tags: problem.tags,
     timeLimitMs: problem.time_limit_ms,
     memoryLimitMb: problem.memory_limit_mb,
-    statement: '',
+    allowedLanguages: problem.allowed_languages ?? ['Rust', 'Python'],
+    statement: problem.statement_markdown ?? '',
     samples: [],
   }
 }
@@ -218,8 +225,10 @@ function toAdminProblem(problem: ApiProblem): AdminProblem {
     tags: problem.tags,
     timeLimitMs: problem.time_limit_ms,
     memoryLimitMb: problem.memory_limit_mb,
+    statementMarkdown: problem.statement_markdown ?? '',
     visibility: problem.visibility ?? 'draft',
     statementLocation: problem.statement_location ?? '',
+    allowedLanguages: problem.allowed_languages ?? ['Rust', 'Python'],
     bundleKey: problem.bundle_key ?? null,
     bundleHash: problem.bundle_hash ?? null,
     checkerKey: problem.checker_key ?? null,

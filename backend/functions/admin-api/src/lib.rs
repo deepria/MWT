@@ -57,6 +57,8 @@ struct CreateProblemRequest {
     tags: Vec<String>,
     time_limit_ms: u32,
     memory_limit_mb: u32,
+    statement_markdown: String,
+    allowed_languages: Vec<String>,
     visibility: Option<ProblemVisibility>,
 }
 
@@ -186,12 +188,14 @@ where
         time_limit_ms: payload.time_limit_ms,
         memory_limit_mb: payload.memory_limit_mb,
         visibility: payload.visibility.unwrap_or(ProblemVisibility::Draft),
+        statement_markdown: payload.statement_markdown.trim().to_string(),
         bundle_key: None,
         bundle_hash: None,
         checker_key: None,
         checker_hash: None,
         problem_version: 1,
         manifest_version: None,
+        allowed_languages: normalize_allowed_languages(payload.allowed_languages),
     };
     let created = repository.create_problem(problem).await?;
 
@@ -409,6 +413,18 @@ fn validate_create_problem(payload: &CreateProblemRequest) -> Result<(), &'stati
     if payload.memory_limit_mb < 16 {
         return Err("memory_limit_mb must be at least 16");
     }
+    if payload.statement_markdown.trim().is_empty() {
+        return Err("statement_markdown is required");
+    }
+    if payload.allowed_languages.is_empty()
+        || payload
+            .allowed_languages
+            .iter()
+            .map(|language| language.trim())
+            .any(|language| language.is_empty() || !is_safe_language(language))
+    {
+        return Err("allowed_languages must contain safe language names");
+    }
     if payload
         .tags
         .iter()
@@ -418,6 +434,22 @@ fn validate_create_problem(payload: &CreateProblemRequest) -> Result<(), &'stati
     }
 
     Ok(())
+}
+
+fn normalize_allowed_languages(languages: Vec<String>) -> Vec<String> {
+    let mut seen = HashSet::new();
+
+    languages
+        .into_iter()
+        .map(|language| language.trim().to_string())
+        .filter(|language| !language.is_empty() && seen.insert(language.clone()))
+        .collect()
+}
+
+fn is_safe_language(value: &str) -> bool {
+    value.chars().all(|character| {
+        character.is_ascii_alphanumeric() || matches!(character, ' ' | '-' | '_' | '+' | '#')
+    })
 }
 
 fn is_safe_tag(value: &str) -> bool {
@@ -783,7 +815,9 @@ mod tests {
               "difficulty":"easy",
               "tags":["array","hash-map"],
               "time_limit_ms":1000,
-              "memory_limit_mb":128
+              "memory_limit_mb":128,
+              "statement_markdown":"Two Sum\n\nFind two numbers.",
+              "allowed_languages":["Rust","Python"]
             }"#,
         );
 
@@ -799,6 +833,8 @@ mod tests {
         let body = body_text_from_response(response);
         assert!(body.contains(r#""problem_id":"two-sum""#));
         assert!(body.contains("s3://mwt-assets-test/problems/two-sum/statement.md"));
+        assert!(body.contains(r#""statement_markdown":"Two Sum\n\nFind two numbers.""#));
+        assert!(body.contains(r#""allowed_languages":["Rust","Python"]"#));
         assert!(body.contains(r#""visibility":"draft""#));
         assert!(body.contains(r#""problem_version":1"#));
     }
@@ -815,7 +851,38 @@ mod tests {
               "difficulty":"easy",
               "tags":["array"],
               "time_limit_ms":1000,
-              "memory_limit_mb":128
+              "memory_limit_mb":128,
+              "statement_markdown":"Two Sum\n\nFind two numbers.",
+              "allowed_languages":["Rust"]
+            }"#,
+        );
+
+        let response = handle_request(
+            request,
+            MemoryRepository::default(),
+            "mwt-assets-test".to_string(),
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn rejects_problem_create_without_statement() {
+        let request = request(
+            Method::POST,
+            "/admin/problems",
+            &[("x-mwt-user-id", "admin-user"), ("x-mwt-groups", "admin")],
+            r#"{
+              "problem_id":"two-sum",
+              "title":"Two Sum",
+              "difficulty":"easy",
+              "tags":["array"],
+              "time_limit_ms":1000,
+              "memory_limit_mb":128,
+              "statement_markdown":" ",
+              "allowed_languages":["Rust"]
             }"#,
         );
 

@@ -30,6 +30,9 @@ async function loadProblem() {
 
     problem.value = problemResponse
     statement.value = statementResponse.content
+    if (!problemResponse.allowedLanguages.includes(language.value)) {
+      language.value = problemResponse.allowedLanguages[0] ?? ''
+    }
   } catch (error) {
     problem.value = null
     statement.value = ''
@@ -65,6 +68,7 @@ async function submitSolution() {
           <DifficultyBadge :value="problem.difficulty" />
           <span>{{ problem.timeLimitMs }}ms</span>
           <span>{{ problem.memoryLimitMb }}MB</span>
+          <span>{{ problem.allowedLanguages.join(', ') }}</span>
         </div>
       </div>
 
@@ -97,8 +101,12 @@ async function submitSolution() {
       <label>
         언어
         <select v-model="language">
-          <option>Rust</option>
-          <option>Python</option>
+          <option
+            v-for="allowedLanguage in problem.allowedLanguages"
+            :key="allowedLanguage"
+          >
+            {{ allowedLanguage }}
+          </option>
         </select>
       </label>
       <label>

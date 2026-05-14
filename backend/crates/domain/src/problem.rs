@@ -1,5 +1,9 @@
 use serde::{Deserialize, Serialize};
 
+fn default_allowed_languages() -> Vec<String> {
+    vec!["Rust".to_string(), "Python".to_string()]
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Difficulty {
@@ -25,7 +29,11 @@ pub struct ProblemMeta {
     pub time_limit_ms: u32,
     pub memory_limit_mb: u32,
     pub visibility: ProblemVisibility,
+    #[serde(default)]
+    pub statement_markdown: String,
     pub statement_location: String,
+    #[serde(default = "default_allowed_languages")]
+    pub allowed_languages: Vec<String>,
     pub bundle_key: Option<String>,
     pub bundle_hash: Option<String>,
     pub checker_key: Option<String>,
@@ -65,6 +73,7 @@ pub struct ProblemSummary {
     pub tags: Vec<String>,
     pub time_limit_ms: u32,
     pub memory_limit_mb: u32,
+    pub allowed_languages: Vec<String>,
 }
 
 impl From<ProblemMeta> for ProblemSummary {
@@ -76,6 +85,7 @@ impl From<ProblemMeta> for ProblemSummary {
             tags: problem.tags,
             time_limit_ms: problem.time_limit_ms,
             memory_limit_mb: problem.memory_limit_mb,
+            allowed_languages: problem.allowed_languages,
         }
     }
 }

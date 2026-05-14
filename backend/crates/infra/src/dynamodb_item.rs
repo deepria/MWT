@@ -285,9 +285,11 @@ mod tests {
             time_limit_ms: 1000,
             memory_limit_mb: 128,
             visibility: ProblemVisibility::Public,
+            statement_markdown: "# 합 경로\n\n정수 배열의 구간 합을 빠르게 구하라.".to_string(),
             statement_location:
                 "s3://mwt-assets-prod-123456789012-ap-northeast-2-example/problems/sum-path/statement.md"
                     .to_string(),
+            allowed_languages: vec!["Rust".to_string(), "Python".to_string()],
             bundle_key: Some("problems/sum-path/bundles/tests-v1.zip".to_string()),
             bundle_hash: Some("sha256:bundle".to_string()),
             checker_key: None,

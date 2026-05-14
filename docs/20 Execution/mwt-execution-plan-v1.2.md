@@ -10,7 +10,7 @@ tags:
 doc_type: execution-plan
 status: active
 version: v1.2
-updated: 2026-05-13
+updated: 2026-05-14
 hub: "[[MWT 마스터 인덱스]]"
 related:
   - "[[mwt-architecture-v1.3]]"
@@ -60,9 +60,11 @@ related:
 - [x] 로그인 가능
 - [x] 문제 목록 조회 가능
 - [x] 문제 상세 조회 가능
-- [ ] 관리자 문제 등록 가능
+- [~] 관리자 문제 등록 가능
+- [x] 문제 설명 본문 등록/조회 가능
+- [x] 문제별 제출 가능 언어 제한 등록/조회 가능
 - [ ] statement 업로드 가능
-- [ ] hidden tests bundle 생성/등록 가능
+- [~] hidden tests bundle 생성/등록 가능
 - [ ] 제출 생성 가능
 - [ ] 최소 1개 언어로 채점 가능
 - [ ] polling으로 결과 확인 가능
@@ -83,7 +85,7 @@ related:
 
 ### Phase 3
 
-- [ ] 문제 자산 저장과 manifest
+- [~] 문제 자산 저장과 manifest
 
 ### Phase 4
 
@@ -91,7 +93,7 @@ related:
 
 ### Phase 5
 
-- [ ] 관리자 문제 등록 플로우
+- [~] 관리자 문제 등록 플로우
 
 ### Phase 6
 
@@ -351,7 +353,13 @@ related:
 
 완료 기준:
 
-- [ ] statement를 S3로 업로드 가능
+- [~] statement를 S3로 업로드 가능
+
+진행 메모:
+
+- Phase 3 MVP의 즉시 노출용 문제 설명은 문제 등록 시 `statement_markdown`으로 저장한다.
+- `/problems/{problem_id}/statement`는 `statement_markdown`을 우선 반환하고, 기존 데이터처럼 비어 있으면 S3 `statement_location`을 fallback으로 읽는다.
+- S3 statement 업로드 UI는 Phase 5 후속 자산 업로드 흐름으로 남긴다.
 
 ### P3-004. sample 업로드 presign API
 
@@ -359,7 +367,7 @@ related:
 
 완료 기준:
 
-- [ ] sample 업로드 가능
+- [~] sample 업로드 가능
 
 ### P3-005. hidden tests bundle 규격 정의
 
@@ -411,11 +419,29 @@ related:
 
 - [x] 관리자 자산 등록 완료 처리 가능
 
+2026-05-13 진행 메모:
+
+- `admin-api`에 `GET /admin/problems`, `POST /admin/problems`, `GET /admin/problems/{problem_id}`,
+  `POST /admin/problems/{problem_id}/assets/presign`,
+  `POST /admin/problems/{problem_id}/bundle/finalize` 구현
+- 문제 메타 등록은 개발기 smoke test 성공
+- bundle presign/finalize는 로컬 테스트와 프론트 구현 완료, 개발기 화면 리허설 대기
+- API Gateway 신규 조회 라우트와 admin Lambda `dynamodb:Scan` 권한 추가 필요
+
+2026-05-14 진행 메모:
+
+- `ProblemMeta`에 `statement_markdown`, `allowed_languages` 추가
+- `POST /admin/problems`에서 문제 설명과 제출 가능 언어를 필수 검증
+- 관리자 신규 등록 화면에 문제 설명 입력과 제출 가능 언어 체크박스 추가
+- 관리자 목록/상세와 참가자 상세에서 제출 가능 언어 노출
+- 참가자 제출 언어 select는 문제별 `allowed_languages` 기준으로 제한
+
 ## Phase 4. 제출 및 채점 파이프라인
 
 ### P4-001. 제출 생성 API 구현
 
 - [ ] source code 입력 검증
+- [ ] 요청 언어가 문제의 `allowed_languages`에 포함되는지 검증
 - [ ] source를 S3 저장
 - [ ] submission meta를 `queued`로 저장
 - [ ] SQS 메시지 발행
@@ -533,28 +559,36 @@ related:
 
 ### P5-001. 관리자 권한 처리
 
-- [ ] Cognito group 또는 claim 기반
+- [x] Cognito group 또는 claim 기반
 
 완료 기준:
 
-- [ ] 일반 사용자는 관리자 API 접근 불가
+- [x] 일반 사용자는 관리자 API 접근 불가
 
 ### P5-002. 관리자 문제 메타 등록 UI
 
-- [ ] 제목
-- [ ] 난이도
-- [ ] 제한 시간
-- [ ] 메모리 제한
+- [x] 제목
+- [x] 난이도
+- [x] 제한 시간
+- [x] 메모리 제한
+- [x] 문제 설명
+- [x] 제출 가능 언어
 - [ ] 공개 여부
 
 완료 기준:
 
-- [ ] 문제 메타 등록 가능
+- [x] 문제 메타 등록 가능
 
 ### P5-003. statement/sample 업로드 UI
 
-- [ ] presigned 업로드
-- [ ] 업로드 성공 확인
+- [ ] sample presigned 업로드
+- [ ] sample 업로드 성공 확인
+- [ ] S3 statement 업로드/교체 UI
+
+진행 메모:
+
+- MVP 문제 설명은 `statement_markdown`으로 등록/조회한다.
+- S3 `statement.md` 업로드는 기존 데이터 fallback과 후속 고급 편집 경로로 유지한다.
 
 ### P5-006. 관리자 rejudge 경로 설계
 
@@ -572,8 +606,8 @@ related:
 
 ### P5-004. hidden tests bundle 등록 UI
 
-- [ ] bundle 업로드
-- [ ] manifest 입력 또는 자동 생성
+- [x] bundle 업로드
+- [x] manifest 입력 또는 자동 생성
 
 추천:
 
@@ -587,7 +621,13 @@ related:
 
 완료 기준:
 
-- [ ] hidden tests 등록 가능
+- [~] hidden tests 등록 가능
+
+진행 메모:
+
+- 관리자 목록 `/admin/problems`와 상세 `/admin/problems/{problem_id}` 화면 추가
+- bundle ZIP 선택, browser-side SHA-256 계산, presigned S3 PUT, finalize 호출까지 UI 구현
+- 개발기 완료 판단은 S3 CORS와 API Gateway 라우트 반영 후 실제 화면 리허설 성공 시점
 
 ### P5-005. 관리자 검증 루틴
 

@@ -196,6 +196,36 @@ textarea {
   background: #ffffff;
 }
 
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0;
+  border: 1px solid #dce5df;
+  border-radius: 8px;
+  padding: 14px;
+  background: #ffffff;
+}
+
+.checkbox-group legend {
+  padding: 0 6px;
+  color: #34443e;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.checkbox-group label {
+  display: flex;
+  grid-auto-flow: column;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+}
+
+.checkbox-group input {
+  width: auto;
+}
+
 textarea {
   resize: vertical;
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
@@ -390,6 +420,13 @@ pre {
 
 .statement-block {
   white-space: pre-wrap;
+}
+
+.inline-statement {
+  max-height: 280px;
+  min-height: 0;
+  padding: 12px;
+  font-size: 13px;
 }
 
 .result-summary {

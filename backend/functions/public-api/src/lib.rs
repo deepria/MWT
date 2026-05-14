@@ -95,9 +95,13 @@ where
         Err(RepositoryError::NotFound(_)) => return not_found("problem not found"),
         Err(error) => return Err(error.into()),
     };
-    let content = repository
-        .get_statement_markdown(&problem.statement_location)
-        .await?;
+    let content = if problem.statement_markdown.trim().is_empty() {
+        repository
+            .get_statement_markdown(&problem.statement_location)
+            .await?
+    } else {
+        problem.statement_markdown.clone()
+    };
 
     json_response(
         StatusCode::OK,

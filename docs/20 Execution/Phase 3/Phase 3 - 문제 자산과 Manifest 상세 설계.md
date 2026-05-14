@@ -6,7 +6,7 @@ tags:
 doc_type: phase-design
 status: active
 phase: 3
-updated: 2026-05-13
+updated: 2026-05-14
 hub: "[[MWT 마스터 인덱스]]"
 parent_plan: "[[mwt-execution-plan-v1.2]]"
 ---
@@ -31,8 +31,8 @@ Phase 3에서는 남은 S3 인프라, 관리자 업로드 presign, bundle finali
 
 - [x] P3-001 S3 bucket 생성
 - [x] P3-002 문제 자산 prefix 설계
-- [~] P3-003 statement 업로드 presign API
-- [~] P3-004 sample 업로드 presign API
+- [x] P3-003 statement 업로드 presign API
+- [x] P3-004 sample 업로드 presign API
 - [x] P3-005 hidden tests bundle 규격 정의
 - [x] P3-006 manifest 스키마 확정
 - [x] P3-007 bundle finalize API 구현
@@ -64,6 +64,28 @@ Phase 3에서는 남은 S3 인프라, 관리자 업로드 presign, bundle finali
 
 따라서 Phase 3는 모델을 새로 만드는 단계가 아니라,
 자산 업로드와 finalize를 실제 운영 가능한 흐름으로 연결하는 단계다.
+
+2026-05-13 진행 결과:
+
+- `admin-api` Lambda handler에 관리자 문제 메타 생성/조회, presign, bundle finalize 경로를 구현했다.
+- `ProblemRepository::list_all_problems`를 추가해 관리자 목록에서 draft 포함 전체 문제를 볼 수 있게 했다.
+- `ProblemAssetRepository::create_problem`, `finalize_problem_bundle`로 DynamoDB 저장 흐름을 연결했다.
+- `AssetUploadRepository::presign_put_object`, `head_object`로 S3 presigned PUT과 object 존재/size 확인을 연결했다.
+- Cognito `cognito:groups` claim 파싱 문제를 수정해 JSON array/CSV/header mock 모두 `admin` group을 인식한다.
+- 프론트에서 관리자 목록, 메타 등록, 상세 번들 업로드/finalize 화면을 구현했다.
+- 로컬 검증: `cargo fmt --all --check && cargo test`, `npm run lint`, `npm run build`, `bash scripts/package-admin-api.sh` 통과.
+- 개발기 확인: `POST /admin/problems`는 실제 DynamoDB `PutItem`까지 성공했다.
+- 남은 운영 확인: 신규 `GET /admin/problems`, `GET /admin/problems/{problem_id}` API Gateway 라우트 추가와 `dynamodb:Scan` 권한 반영.
+
+2026-05-14 보강 결과:
+
+- 문제 등록과 관리자/참가자 조회에서 문제 설명 본문이 빠져 있던 문제를 보완했다.
+- `ProblemMeta`에 `statement_markdown`과 `allowed_languages`를 추가했다.
+- `POST /admin/problems`는 `statement_markdown`, `allowed_languages`를 필수로 받는다.
+- `/problems/{problem_id}/statement`는 `statement_markdown`이 있으면 이를 우선 반환하고,
+  기존 데이터처럼 값이 비어 있으면 S3 `statement_location`을 fallback으로 읽는다.
+- 프론트 관리자 등록 화면에 문제 설명 입력과 제출 가능 언어 체크박스를 추가했다.
+- 참가자 문제 상세의 제출 언어 선택은 문제별 `allowed_languages`를 따른다.
 
 ### 완료로 볼 수 있는 항목
 
@@ -179,6 +201,8 @@ Bucket 구성:
 - `problem_id`는 기존 문제 메타의 ID를 그대로 사용한다.
 - `{n}`은 finalize 시점에 확정되는 다음 `manifest_version`과 맞춘다.
 - statement는 문제당 현재본 1개를 유지한다.
+- Phase 3 MVP의 즉시 노출용 문제 설명은 `ProblemMeta.statement_markdown`에 저장한다.
+  S3 `statement.md`는 기존 데이터 fallback과 후속 statement 업로드 UI를 위한 자산 경로로 유지한다.
 - bundle/checker는 버전 prefix를 유지해 이전 제출의 재현성을 보장한다.
 
 ### presign API
@@ -195,6 +219,8 @@ Endpoint:
 GET /admin/problems
 POST /admin/problems
 GET /admin/problems/{problem_id}
+POST /admin/problems/{problem_id}/assets/presign
+POST /admin/problems/{problem_id}/bundle/finalize
 ```
 
 요청 예시:
@@ -207,6 +233,8 @@ GET /admin/problems/{problem_id}
   "tags": ["array", "hash-map"],
   "time_limit_ms": 1000,
   "memory_limit_mb": 128,
+  "statement_markdown": "# Two Sum\n\n정수 배열에서 합이 target이 되는 두 원소를 찾는다.",
+  "allowed_languages": ["Rust", "Python"],
   "visibility": "draft"
 }
 ```
@@ -219,11 +247,20 @@ GET /admin/problems/{problem_id}
 - `bundle_key`, `bundle_hash`, `checker_key`, `checker_hash`: `null`
 - `visibility`: 요청에 없으면 `draft`
 
+필수 검증:
+
+- `statement_markdown`은 비어 있을 수 없다.
+- `allowed_languages`는 1개 이상이어야 한다.
+- 언어명은 영문/숫자/공백/`-`, `_`, `+`, `#`만 허용한다.
+- 중복 언어명은 저장 전 제거한다.
+
 #### 자산 presign
 
 P3-003/P3-004에서 `admin-api`에 관리자 전용 presign endpoint를 추가한다.
 presigned URL은 짧게 살아야 하므로 문제 메타 등록 시점이 아니라 실제 업로드 버튼을
 누르는 시점에 새로 발급한다.
+
+브라우저 테스트 흐름은 `/admin/problems/{problem_id}` 상세 화면에서 실행한다.
 
 Endpoint:
 
@@ -335,11 +372,12 @@ POST /admin/problems/{problem_id}/bundle/finalize
 
 ## 다음 실행 순서
 
-1. 기존 assets bucket `mwt-assets-prod-123456789012-ap-northeast-2-example`의 CORS/versioning/encryption 설정 확인
-2. assets/logs bucket 이름을 Lambda 환경변수와 민감 설정 인벤토리에 반영
-3. `admin-api` 개발기 Lambda 배포
-4. P3-007 finalize API와 repository write 함수 구현
-5. 로컬 unit test와 개발기 업로드 리허설
+1. 문제 설명/제출 언어 보강분을 `admin-api`, `public-api`, frontend에 배포
+2. 관리자 화면에서 신규 문제 등록 시 설명과 제출 가능 언어가 저장되는지 확인
+3. 참가자 문제 상세에서 설명 본문과 언어 제한이 노출되는지 확인
+4. 관리자 화면에서 기존 `test` 문제가 목록에 보이는지 확인
+5. 상세 화면에서 bundle ZIP 업로드 후 finalize 리허설
+6. finalize 동시성 보강을 DynamoDB transaction 또는 conditional write로 후속 처리
 
 ## 완료 기준
 
@@ -347,3 +385,8 @@ POST /admin/problems/{problem_id}/bundle/finalize
 - 관리자 API로 statement/sample/bundle/checker 업로드 URL을 발급할 수 있다.
 - bundle finalize 후 `ProblemMeta`와 `ProblemManifest`가 같은 version/hash를 가리킨다.
 - 잘못된 hash, 누락된 S3 object, 잘못된 manifest는 저장 전에 차단된다.
+
+현재 완료 판단:
+
+- 로컬 코드와 테스트 기준 완료.
+- 개발기 전체 완료 판단은 API Gateway 신규 라우트, Lambda 실행 역할 권한, S3 CORS 반영 후 화면 리허설 성공 시점으로 둔다.

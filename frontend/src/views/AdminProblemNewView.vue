@@ -6,6 +6,7 @@ import { createAdminProblem } from '@/services/apiClient'
 import type { Difficulty } from '@/types/problem'
 
 const router = useRouter()
+const languageOptions = ['Rust', 'Python']
 
 const form = reactive({
   problemId: '',
@@ -14,6 +15,8 @@ const form = reactive({
   timeLimitMs: 1000,
   memoryLimitMb: 128,
   tags: '',
+  statementMarkdown: '',
+  allowedLanguages: ['Rust'],
 })
 
 const isSubmitting = ref(false)
@@ -24,6 +27,8 @@ const canSubmit = computed(
   () =>
     form.problemId.trim().length > 0 &&
     form.title.trim().length > 0 &&
+    form.statementMarkdown.trim().length > 0 &&
+    form.allowedLanguages.length > 0 &&
     form.timeLimitMs >= 100 &&
     form.memoryLimitMb >= 16 &&
     !isSubmitting.value,
@@ -51,6 +56,8 @@ async function submitProblem() {
       tags: tagsFromInput(),
       time_limit_ms: form.timeLimitMs,
       memory_limit_mb: form.memoryLimitMb,
+      statement_markdown: form.statementMarkdown.trim(),
+      allowed_languages: form.allowedLanguages,
     })
 
     createdProblemId.value = problem.id
@@ -124,6 +131,27 @@ async function goToCreatedProblem() {
         태그
         <input v-model="form.tags" type="text" placeholder="graph, bfs" />
       </label>
+
+      <label>
+        문제 설명
+        <textarea
+          v-model="form.statementMarkdown"
+          rows="12"
+          placeholder="# 문제 설명&#10;&#10;입력과 출력 조건을 Markdown으로 작성"
+        />
+      </label>
+
+      <fieldset class="checkbox-group">
+        <legend>제출 가능 언어</legend>
+        <label v-for="language in languageOptions" :key="language">
+          <input
+            v-model="form.allowedLanguages"
+            type="checkbox"
+            :value="language"
+          />
+          {{ language }}
+        </label>
+      </fieldset>
 
       <p v-if="errorMessage" class="form-error">{{ errorMessage }}</p>
 

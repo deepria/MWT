@@ -211,6 +211,7 @@ async function uploadAndFinalizeBundle() {
           <DifficultyBadge :value="problem.difficulty" />
           <span>{{ problem.timeLimitMs }}ms</span>
           <span>{{ problem.memoryLimitMb }}MB</span>
+          <span>{{ problem.allowedLanguages.join(', ') }}</span>
           <span>problem v{{ problem.problemVersion }}</span>
           <span>
             manifest
@@ -224,6 +225,14 @@ async function uploadAndFinalizeBundle() {
           <div>
             <dt>Statement</dt>
             <dd>{{ problem.statementLocation }}</dd>
+          </div>
+          <div>
+            <dt>등록 설명</dt>
+            <dd>
+              <pre class="statement-block inline-statement">{{
+                problem.statementMarkdown
+              }}</pre>
+            </dd>
           </div>
           <div>
             <dt>Bundle</dt>

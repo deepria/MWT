@@ -12,6 +12,7 @@ export interface Problem {
   tags: string[]
   timeLimitMs: number
   memoryLimitMb: number
+  allowedLanguages: string[]
   statement: string
   samples: SampleCase[]
 }
